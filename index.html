@@ -2345,6 +2345,7 @@ function renderChronoIntervalleView(container) {
             <!-- Liste des Intervalles -->
             <div class="bg-gray-700 p-4 rounded-lg border-2 border-purple-500 mb-6">
                 <h3 class="text-xl sm:text-2xl text-yellow-300 mb-3">SÉQUENCE D'INTERVALLES :</h3>
+                <p class="text-md sm:text-lg text-gray-300 mb-3">Durée totale des intervalles : <span class="font-bold text-yellow-300" id="total-interval-duration">0 minutes</span></p>
                 <div id="intervals-list" class="space-y-2 mb-4">
                     <!-- Les intervalles seront listés ici -->
                 </div>
@@ -2374,7 +2375,7 @@ function renderChronoIntervalleView(container) {
     const chronoPreCountdownDurationInput = document.getElementById('chrono-pre-countdown-duration');
     const saveSequenceBtn = document.getElementById('save-sequence-btn');
     const loadSequenceBtn = document.getElementById('load-sequence-btn');
-
+    updateTotalIntervalDurationDisplay();
     // Met à jour l'affichage du chronomètre
     function updateChronoDisplay() {
         const displayTime = chronoCurrentIntervalIndex === -1 ? `PRÊT: ${String(chronoCurrentTime).padStart(2, '0')}` : `${String(Math.floor(chronoCurrentTime / 60)).padStart(2, '0')}:${String(chronoCurrentTime % 60).padStart(2, '0')}`;
@@ -2474,6 +2475,7 @@ function renderChronoIntervalleView(container) {
             listHtml += `</ul>`;
         }
         intervalsListDiv.innerHTML = listHtml;
+        updateTotalIntervalDurationDisplay();
 
         intervalsListDiv.querySelectorAll('.remove-interval-btn').forEach(button => {
             button.onclick = async (event) => {
@@ -2717,7 +2719,23 @@ function renderChronoIntervalleView(container) {
         chronoIntervalTimerRef = setInterval(chronoLoop, 1000);
     }
 }
-
+// Calcule et affiche la durée totale de tous les intervalles
+function updateTotalIntervalDurationDisplay() {
+    let totalSeconds = 0;
+    chronoIntervals.forEach(interval => {
+        totalSeconds += interval.duration;
+    });
+    const totalMinutes = Math.floor(totalSeconds / 60);
+    const remainingSeconds = totalSeconds % 60;
+    const totalDurationDisplay = document.getElementById('total-interval-duration');
+    if (totalDurationDisplay) {
+        if (remainingSeconds > 0) {
+            totalDurationDisplay.textContent = `${totalMinutes} minutes et ${remainingSeconds} secondes`;
+        } else {
+            totalDurationDisplay.textContent = `${totalMinutes} minutes`;
+        }
+    }
+}
 // Rend la vue de l'évolution (graphiques)
 function renderProgressView(container) {
     let html = `
