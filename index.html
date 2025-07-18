@@ -2737,7 +2737,6 @@ function updateTotalIntervalDurationDisplay() {
     }
 }
 // Rend la vue de l'évolution (graphiques)
-// Rend la vue de l'évolution (graphiques)
 function renderProgressView(container) {
     let html = `
         <div class="card-retro mb-6">
@@ -2803,8 +2802,8 @@ function renderProgressView(container) {
 
     // Fonction utilitaire pour découper un long texte en plusieurs lignes pour l'affichage
     // Cette fonction est déplacée ici pour être auto-contenue dans la vue
-    // Version améliorée pour gérer les mots très longs
-    function splitTextIntoLines(text, maxLength = 80) { // Augmentation de la longueur maximale par ligne
+    // Version améliorée pour mieux s'adapter aux écrans étroits (ex: mobiles)
+    function splitTextIntoLines(text, maxLength = 40) { // Réduction de la longueur maximale par ligne
         if (!text) return [];
         const words = text.split(' ');
         const lines = [];
@@ -3094,7 +3093,7 @@ function renderProgressView(container) {
                                 details.push(`RESSENTI: ${String(log.feeling).toUpperCase()}`);
                                 if (log.notes) {
                                     // Utilise la fonction pour découper les notes
-                                    const noteLines = splitTextIntoLines(`NOTES: ${String(log.notes).toUpperCase()}`, 80); // Utilisation de la nouvelle fonction avec maxLength 80
+                                    const noteLines = splitTextIntoLines(`NOTES: ${String(log.notes).toUpperCase()}`, 40); // Utilisation de la nouvelle fonction avec maxLength 40
                                     noteLines.forEach(line => details.push(line));
                                 }
                                 return details;
