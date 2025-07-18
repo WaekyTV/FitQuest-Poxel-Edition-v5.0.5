@@ -2803,7 +2803,7 @@ function renderProgressView(container) {
     // Fonction utilitaire pour découper un long texte en plusieurs lignes pour l'affichage
     // Cette fonction est déplacée ici pour être auto-contenue dans la vue
     // Version améliorée pour mieux s'adapter aux écrans étroits (ex: mobiles)
-    function splitTextIntoLines(text, maxLength = 40) { // Réduction de la longueur maximale par ligne
+    function splitTextIntoLines(text, maxLength = 30) { // Réduction de la longueur maximale par ligne à 30
         if (!text) return [];
         const words = text.split(' ');
         const lines = [];
@@ -3062,6 +3062,8 @@ function renderProgressView(container) {
                 plugins: {
                     legend: { labels: { color: 'white', font: { family: 'VT323' } } },
                     tooltip: {
+                        // Ajout de 'displayColors: false' pour libérer de l'espace horizontal
+                        displayColors: false,
                         callbacks: {
                             title: function(context) {
                                 return new Date(filteredLogs[context[0].dataIndex].date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase();
@@ -3092,8 +3094,8 @@ function renderProgressView(container) {
                                 let details = [];
                                 details.push(`RESSENTI: ${String(log.feeling).toUpperCase()}`);
                                 if (log.notes) {
-                                    // Utilise la fonction pour découper les notes
-                                    const noteLines = splitTextIntoLines(`NOTES: ${String(log.notes).toUpperCase()}`, 40); // Utilisation de la nouvelle fonction avec maxLength 40
+                                    // Utilise la fonction pour découper les notes avec une longueur de ligne réduite
+                                    const noteLines = splitTextIntoLines(`NOTES: ${String(log.notes).toUpperCase()}`, 30); // Longueur maximale réduite à 30
                                     noteLines.forEach(line => details.push(line));
                                 }
                                 return details;
@@ -3139,6 +3141,7 @@ function renderProgressView(container) {
         showMessage("PAS ASSEZ DE DONNÉES D'EXERCICES POUR LE GRAPHIQUE. ENREGISTREZ DES SÉANCES.", 'info');
     }
 }
+
 
 // Rend la vue de la salle des trophées
 function renderTrophyRoomView(container) {
