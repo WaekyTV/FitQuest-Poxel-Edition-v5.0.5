@@ -470,7 +470,325 @@ repas ou ingrédients à l'avance (ex: cuire une grande quantité de riz, couper
 légumes, préparer des portions de protéines). Cela te fera gagner un temps précieux en
 semaine !
 `;
-
+const basicFitRecipes = {
+    "PETIT-DÉJEUNER": [
+        "Pain perdu avec avocat et œuf au plat (15 min)",
+        "Beignets de courgettes et de carottes sauce avocat (40 min)",
+        "Porridge au chocolat protéiné (10 min)",
+        "Huevos Rancheros (15 min)",
+        "Pancakes protéinés à la banane (15 min)",
+        "Smoothie Bowl au chocolat chaud (10 min)",
+        "Bol de smoothie au chocolat chaud (10 min)",
+        "Tomates balsamiques rôties & Toast au houmous (25 min)",
+        "Mugcake à la vanille (6 min)",
+        "Mug Cake protéiné à la vanille (3 min)",
+        "Yaourt, mangue et granola (10 min)",
+        "Trifle à la framboise (10 min)",
+        "Pancakes protéinés à l'orange et au yaourt (15 min)",
+        "Crêpes aux myrtilles riches en protéines (15 min)",
+        "Bol de protéines du smoothie d'été (10 min)",
+        "Yaourt à la vanille et à l'avoine (5 min)",
+        "Banana & Coconut Bread (55 min)",
+        "Œufs brouillés au curry (15 min)",
+        "Crêpes aux baies (20 min)",
+        "Pancakes protéinés au fromage blanc (20 min)",
+        "Muffins végétaliens (45 min)",
+        "Crème de millet coco-banane (20 min)",
+        "Fromage blanc (quark) à la grenade, à la noix de coco & au chocolat noir (5 min)",
+        "Des beignets de maïs sucré rapides (20 min)",
+        "Crêpes de sarrasin sans œufs (40 min)",
+        "Pudding aux graines de chia (5 min)",
+        "Pudding au chocolat et au millet (20 min)",
+        "Œufs brouillés à l'asiatique (15 min)",
+        "Tacos protéinés aux fruits (10 min)",
+        "Bol de smoothie à la framboise (10 min)",
+        "Pudding de chia protéiné à la fraise (15 min)",
+        "Crumble de pommes pour le petit déjeuner (35 min)",
+        "Gâteau à la banane et à la fraise pauvre en glucides (70 min)",
+        "Pancakes vegan à la banane (30 min)",
+        "Toast au fromage de chèvre et avocat (5 min)",
+        "Pancakes de patate douce sains (30 min)",
+        "Toast à l'avocat, feta et grenade (5 min)",
+        "Omelette aux épinards, avocat et cottage cheese (15 min)",
+        "Petit-déjeuner équilibré et nutritif avec œuf au plat (20 min)",
+        "Salade de quinoa au petit-déjeuner avec œuf au plat (20 min)",
+        "Smoothie Bowl (10 min)",
+        "Avocat, tapenade et toast aux œufs (10 min)",
+        "Porridge pomme cannelle (20 min)",
+        "Pancakes aux amandes et à la banane (25 min)",
+        "Smoothie Bowl à l'orange (10 min)",
+        "Flocons d'avoine au chocolat noir et coco (15 min)",
+        "Avocat et tomates au basilic sur toast (10 min)",
+        "Chia Pudding au chocolat et à la noix de coco (15 min)",
+        "Pudding au chocolat et au chia (10 min)",
+        "Œufs au plat aux tomates et thon (10 min)",
+        "Pancake de courgettes et feta (15 min)",
+        "Purée d'avocat aux œufs (10 min)",
+        "Pain perdu (20 min)",
+        "Muffins aux œufs, brocoli et jambon (20 min)"
+    ],
+    "DÉJEUNER": [
+        "Curry de poulet simple avec du riz safrané (60 min)",
+        "Taboulé de quinoa et courgette au poulet Harissa (35 min)",
+        "Pommes de terre & choux de Bruxelles avec saucisse (40 min)",
+        "Pancakes aux pois chiches, bœuf et lentilles (35 min)",
+        "Salade de quinoa arc-en-ciel avec dinde grillée (20 min)",
+        "Beignets de courgettes et de carottes sauce avocat (40 min)",
+        "Saumon cuit au four avec des zoodles et du quinoa (25 min)",
+        "Pâtes aux tomates, haricots verts et morue (30 min)",
+        "Soupe aux champignons (45 min)",
+        "Pâtes potiron à la bolognaise (45 min)",
+        "Saumon fumé et salade de fraises (5 min)",
+        "Zoodles au quinoa & œuf poché (25 min)",
+        "Sauté de crevettes au curry facile (20 min)",
+        "Tofu épicé à la sauce à l'ail (50 min)",
+        "Salade de thon et de quinoa (20 min)",
+        "Wraps de Sharma à la betterave vegan (30 min)",
+        "Omelette au saumon fumé, feta et asperges (25 min)",
+        "Pain perdu (20 min)",
+        "Wraps à la salade de thon (10 min)",
+        "Ragoût d'épinards végétaliens (25 min)",
+        "Salade d'avocats et de thon en couches (10 min)",
+        "Soupe d'aneth avec boulettes de viande de dinde (45 min)",
+        "Beef Keema (45 min)",
+        "Morue avec des zoodles crémeux (30 min)",
+        "Omelette au fromage blanc et basilic (20 min)",
+        "Pancakes de patate douce (25 min)",
+        "Curry de pommes de terre crémeuses à la noix de coco (40 min)",
+        "Salade de chou frisé et tofu avec vinaigrette au beurre d'arachide (20 min)",
+        "Salade de tahini superfood (10 min)",
+        "Goulasch d'aubergine fumé (60 min)",
+        "Frites de courgette (35 min)",
+        "Tajine d'aubergine (40 min)",
+        "Lasagnes végétariennes (60 min)",
+        "Salade de poulet pesto et brocoli (25 min)",
+        "Smoothie Bowl à l'orange (10 min)",
+        "Shakshuka vert (40 min)",
+        "Patates douces rôties avec houmous et pesto (45 min)",
+        "Poivrons farcis à l'œuf et à la dinde (25 min)",
+        "Salade de concombres écrasés au saumon (10 min)",
+        "Riz frit aux œufs et à la dinde (20 min)",
+        "Salade de poulet, d'orange et de noix (20 min)",
+        "Pâtes crémeuses végétaliennes aux tomates séchées (15 min)",
+        "Salade de poulet thaïlandaise (15 min)",
+        "Pâtes au thon et aux épinards (15 min)",
+        "Salade de thon et de pommes de terre avec vinaigrette à l'orange (40 min)",
+        "Salade asiatique au poulet (25 min)",
+        "Salade de saumon et de pêches (45 min)",
+        "Salade de fromage de chèvre, poires et noix (10 min)",
+        "Curry de légumes rapide (25 min)",
+        "Spaghettis sans viande (25 min)",
+        "Curry végétalien de patate douce et de chou-fleur (45 min)",
+        "Pois chiches et aubergine farcie au tahini (45 min)",
+        "Salade de citrouille grillée, tofu et boulgour (30 min)",
+        "Crêpes farcies aux épinards, à la tomate et à la feta (35 min)",
+        "Salade de poulet Waldorf (10 min)",
+        "Salade grecque de zoodle (10 min)",
+        "Salade de quinoa végétalienne (20 min)",
+        "Risotto style Chakalaka (40 min)",
+        "Soupe au poulet (35 min)",
+        "Salade de poulet au citron grillé (40 min)",
+        "Wraps coréens au poulet (70 min)",
+        "Mijoté de chou-fleur Tikka Masala (10 min)",
+        "Salade de chou frisé, quinoa et canneberges (25 min)",
+        "Saumon, pommes de terre & asperges au four (40 min)",
+        "Ragoût de poisson et de citrouille (20 min)",
+        "Sauté de poulet à l'orange (35 min)",
+        "Pâtes crémeuses au poulet, aux champignons et aux tomates (30 min)",
+        "Quinoa mexicain (30 min)",
+        "Sauté de bœuf et de brocoli (25 min)",
+        "Curry de pois chiches, patate douce et épinards (30 min)",
+        "Des chips simples au chili et à la patate douce (50 min)",
+        "Hachis de patates douces et de courgettes (20 min)",
+        "Nouilles crémeuses aux crevettes (20 min)",
+        "Soupe crémeuse au potiron (30 min)",
+        "Tombet espagnol (70 min)",
+        "Marmite de dinde épicée et son riz (35 min)",
+        "Salade de légumes racines rôtis à la feta (40 min)",
+        "Ragoût de lentilles espagnol (55 min)",
+        "Salade de chou frisé et de brocoli (25 min)",
+        "Saumon glacé au miel et au citron vert avec son riz à l'ananas (100 min)",
+        "Curry poulet, pomme de terre (30 min)",
+        "Omelette aux épinards, avocat et cottage cheese (15 min)",
+        "Wraps mexicains au poulet grillé et avocat (20 min)",
+        "Pancakes vegan à la banane (30 min)",
+        "Toast au fromage de chèvre et avocat (5 min)",
+        "Salade verte avec vinaigrette (10 min)",
+        "Fondue de thon végétalienne (10 min)",
+        "Soupe d'asperges au curry (60 min)",
+        "Bœuf au sésame et au gingembre avec des nouilles de courgettes (17 min)",
+        "Risotto crémeux aux poireaux (35 min)",
+        "Salade de poires, jambon et noix (15 min)",
+        "Soupe de potiron de la pleine lune (40 min)",
+        "Rouleaux de printemps de saumon (15 min)",
+        "Soupe Tom Yum aux crevettes (15 min)",
+        "Houmous aux haricots noirs (5 min)",
+        "Pico de Gallo (10 min)",
+        "Salade de lentilles (45 min)",
+        "Salade d'asperges (15 min)",
+        "Salade de nouilles de patates douces (20 min)",
+        "Salade d'œufs au curry (15 min)",
+        "Salade de dinde et de brocoli (20 min)",
+        "Salade de haricots noirs au poulet et à l'avocat (20 min)",
+        "Salade de lentilles et d'halloumi (25 min)",
+        "Soupe de légumes au curry (35 min)",
+        "Poulet de cajou simple (20 min)",
+        "Salade de quinoa, brocoli et poulet (20 min)",
+        "Salade de chou-fleur (25 min)",
+        "Salade de poulet de type thaï (15 min)",
+        "Poulet du Général Tso (35 min)"
+    ],
+    "COLLATION": [
+        "Houmous classique (10 min)",
+        "Bouchées de chocolat à la banane (90 min)",
+        "Écorce de chocolat superfood (35 min)",
+        "Ferrero Rocher, version plus saine (10 min)",
+        "Houmous aux haricots noirs (5 min)",
+        "Des beignets de maïs sucré rapides (20 min)",
+        "Latte de curcuma doré (10 min)",
+        "Pico de Gallo (10 min)",
+        "Des biscuits simples à l'avoine (30 min)",
+        "Smoothie protéiné façon Pina Colada (5 min)",
+        "Pancakes de patate douce (25 min)",
+        "Tarte au potiron (30 min)",
+        "Muffins sans farine à la banane et aux noix de cajou (20 min)",
+        "Brownies au beurre de cacahuète sans farine (40 min)",
+        "Crème de bananes glacés protéinée (5 min)",
+        "Biscuits faciles à base d'avoine et de carottes (30 min)",
+        "Trifle à la framboise (10 min)",
+        "Crêpes aux myrtilles riches en protéines (15 min)",
+        "Gâteau crémeux aux poires (65 min)",
+        "Yaourt à la vanille et à l'avoine (5 min)",
+        "Tropical Smoothie (5 min)",
+        "Pudding aux graines de chia (5 min)",
+        "Pudding au chocolat et au millet (20 min)",
+        "Gâteau végétalien au citron et à la noix de coco (75 min)",
+        "Pudding aux protéines de millet et framboise (20 min)",
+        "Energy Balls aux amandes (10 min)",
+        "Frites de courgette (35 min)",
+        "Biscuits chocolatés à l'avoine (45 min)",
+        "Smoothie protéiné à la cannelle (5 min)",
+        "Smoothie protéiné aux fruits rouges (5 min)",
+        "Muffins végétaliens (45 min)",
+        "Smoothie vert (5 min)",
+        "Pudding au chia et aux bananes (15 min)",
+        "Mousse au chocolat et à l'orange (30 min)",
+        "Bouchées de courgettes croustillantes (25 min)",
+        "Smoothie vert enrichi en protéines (5 min)",
+        "Flocons d'avoine au chocolat noir et coco (15 min)",
+        "Patates douces rôties avec houmous et pesto (45 min)",
+        "Avocat et tomates au basilic sur toast (10 min)",
+        "Smoothie protéiné à la framboise (5 min)",
+        "Pudding de chia protéiné à la fraise (15 min)",
+        "Crumble de pommes pour le petit déjeuner (35 min)",
+        "Gâteau à la banane et à la fraise pauvre en glucides (70 min)",
+        "Mocha Truffles (130 min)",
+        "Pois chiches à l'ail grillés (50 min)",
+        "Pancakes vegan à la banane (30 min)",
+        "Truffes à la vanille et à la noix de coco (70 min)",
+        "Biscuits protéinés aux noisettes (20 min)",
+        "Crispy Tofu (45 min)",
+        "Crème de millet coco-banane (20 min)",
+        "Smoothie vert énergisant (5 min)",
+        "Énergie Ball noix de coco & beurre de cacahuète (10 min)",
+        "Fromage blanc (quark) à la grenade, à la noix de coco & au chocolat noir (5 min)",
+        "Pancakes à la banane post-entraînement (20 min)",
+        "Muffins aux œufs, brocoli et jambon (20 min)",
+        "Houmous classique (10 min)",
+        "Biscuits protéinés aux noisettes (20 min)",
+        "Toast à l'avocat, feta et grenade (5 min)",
+        "Muffins protéinés à la fraise (35 min)",
+        "Beignets aux pommes et à la cannelle (15 min)",
+        "Smoothie mangue & curcuma (5 min)",
+        "Smoothie Bowl au chocolat chaud (10 min)",
+        "Tomates balsamiques rôties & Toast au houmous (25 min)",
+        "Smoothie banane/orange post entraînement (5 min)",
+        "Chia Pudding au chocolat et à la noix de coco (15 min)",
+        "Pudding au chocolat et au chia (10 min)",
+        "Mugcake à la vanille (6 min)",
+        "Mug Cake protéiné à la vanille (3 min)",
+        "Dessert hyperprotéiné au chocolat et aux noisettes (10 min)",
+        "Pain au chocolat, aux amandes et aux courgettes (65 min)"
+    ],
+    "DÎNER": [
+        "Sauté de bœuf et de brocoli (25 min)",
+        "Soupe crémeuse au potiron (30 min)",
+        "Pâtes potiron à la bolognaise (45 min)",
+        "Filet de poulet aux herbes et pommes de terre au four (45 min)",
+        "Sauté de crevettes au curry facile (20 min)",
+        "Tofu épicé à la sauce à l'ail (50 min)",
+        "Wraps de Sharma à la betterave vegan (30 min)",
+        "Fondue de thon végétalienne (10 min)",
+        "Soupe d'asperges au curry (60 min)",
+        "Bœuf au sésame et au gingembre avec des nouilles de courgettes (17 min)",
+        "Risotto crémeux aux poireaux (35 min)",
+        "Marmite de dinde épicée et son riz (35 min)",
+        "Ragoût de lentilles espagnol (55 min)",
+        "Rigatoni alla Norma (20 min)",
+        "Pide turc à la merguez de bœuf (75 min)",
+        "Fajitas au bœuf haché, avocat et salsa de tomates (28 min)",
+        "Sushibowl avec saumon fumé et mayonnaise au gingembre (25 min)",
+        "Cuisse de poulet confite croustillante laquée au Ketjap (50 min)",
+        "Orzo garni de ricotta au citron (60 min)",
+        "Saumon glacé au miel et au citron vert avec son riz à l'ananas (100 min)",
+        "Nouilles et émincé de bœuf en sauce asiatique (50 min)",
+        "Salade de boulgour aux légumes rôtis et fromage de chèvre (45 min)",
+        "Curry poulet, pomme de terre (30 min)",
+        "Sauté de brocoli et de poulet (25 min)",
+        "Curry de poulet simple avec du riz safrané (60 min)",
+        "Pommes de terre & choux de Bruxelles avec saucisse (40 min)",
+        "Pancakes aux pois chiches, bœuf et lentilles (35 min)",
+        "Bœuf cajun et riz aux légumes (35 min)",
+        "Salade de quinoa arc-en-ciel avec dinde grillée (20 min)",
+        "Pilons de poulet marocains (60 min)",
+        "Saumon cuit au four avec des zoodles et du quinoa (25 min)",
+        "Pâtes aux tomates, haricots verts et morue (30 min)",
+        "Salade de poulet, d'orange et de noix (20 min)",
+        "Pâtes crémeuses végétaliennes aux tomates séchées (15 min)",
+        "Salade de poulet thaïlandaise (15 min)",
+        "Crevettes et légumes à la chinoise (30 min)",
+        "Pâtes au thon et aux épinards (15 min)",
+        "Salade asiatique au poulet (25 min)",
+        "Saumon, pommes de terre & asperges au four (40 min)",
+        "Ragoût de poisson et de citrouille (20 min)",
+        "Sauté de poulet à l'orange (35 min)",
+        "Pâtes crémeuses au poulet, aux champignons et aux tomates (30 min)",
+        "Quinoa mexicain (30 min)",
+        "Curry de légumes rapide (25 min)",
+        "Spaghettis sans viande (25 min)",
+        "Curry végétalien de patate douce et de chou-fleur (45 min)",
+        "Pois chiches et aubergine farcie au tahini (45 min)",
+        "Salade de citrouille grillée, tofu et boulgour (30 min)",
+        "Salade de poulet Waldorf (10 min)",
+        "Lasagnes végétariennes (60 min)",
+        "Salade de poulet pesto et brocoli (25 min)",
+        "Cuisses de poulet au riz Hoisin (55 min)",
+        "Riz à la noix de coco et aux crevettes (50 min)",
+        "Bœuf rapide Chow Mein (20 min)",
+        "Salade de concombres écrasés au saumon (10 min)",
+        "Curry indien de pois chiches et de citrouille (45 min)",
+        "Riz frit aux œufs et à la dinde (20 min)",
+        "Nouilles asiatiques au poulet et aux légumes (25 min)",
+        "Sauté de poulet et de mangue (20 min)",
+        "Sauté de porc chinois à l'ananas (30 min)",
+        "Bœuf et lentilles bolognaise (50 min)",
+        "Omelette au saumon fumé, feta et asperges (25 min)",
+        "Salade d'avocats et de thon en couches (10 min)",
+        "Soupe d'aneth avec boulettes de viande de dinde (45 min)",
+        "Beef Keema (45 min)",
+        "Soupe au poulet (35 min)",
+        "Mijoté de chou-fleur Tikka Masala (10 min)",
+        "Salade de chou frisé, quinoa et canneberges (25 min)",
+        "Curry de pommes de terre crémeuses à la noix de coco (40 min)",
+        "Soupe mexicaine au poulet (25 min)",
+        "Frites de courgette (35 min)",
+        "Tajine d'aubergine (40 min)",
+        "Soupe de potiron de la pleine lune (40 min)",
+        "Soupe de légumes au curry (35 min)",
+        "Bouillon de poulet pour renforcer le système immunitaire (180 min)",
+        "Soupe Tom Yum aux crevettes (15 min)"
+    ]
+};
 // Liste de tous les trophées disponibles et leurs conditions
 const allTrophies = [
     { id: 't001', name: 'PREMIER PAS', description: 'Atteindre le Niveau 1. Le voyage commence !', levelRequired: 1 },
@@ -1642,12 +1960,10 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
     const userImcCategory = userProfileData.imcCategory;
     const userProteinNeeds = userProfileData.proteinNeeds;
 
-    // Début de la modification : Forcer numPeople à 1 pour petit-déjeuner et collations
     let actualNumPeople = numPeople;
     if (mealType === 'petit_dejeuner' || mealType.startsWith('collation')) {
         actualNumPeople = 1; // Force à 1 personne pour le petit-déjeuner et les collations
     }
-    // Fin de la modification
 
     let mealContextDescription = getMealMomentContext(mealType, dayContext.poste, dayContext.sport);
     let sportImpact = "";
@@ -1666,11 +1982,9 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
 
    if (!allowMeatFish) {
         mealSpecificConstraints.push("EXCLURE STRICTEMENT TOUTE VIANDE (ROUGE OU BLANCHE) ET POISSON. PRIVILÉGIER LES PROTÉINES VÉGÉTALES (LÉGUMINEUSES COMME LENTILLES, POIS CHICHES, HARICOTS ROUGES; TOFU, TEMPEH, SEITAN), LES CÉRÉALES COMPLÈTES À HAUTE TENEUR EN PROTÉINES (QUINOA, SARRASIN, AMARANTE), LES ŒUFS, ET LES PRODUITS LAITIERS (FROMAGE BLANC, YAOURT GREC) SI APPLICABLE AU TYPE DE REPAS. ASSURER UNE DIVERSITÉ RÉELLE ET SYSTÉMATIQUE DES SOURCES DE PROTÉINES VÉGÉTALES ET AUTRES, NE PAS SE LIMITER AUX LENTILLES OU AU TOFU. VARIER LES PRÉPARATIONS ET LES SAVEURS.");
-    } else {
-        mealSpecificConstraints.push("ALTERNANCE SYSTÉMATIQUE ET ÉQUILIBRÉE ENTRE UNE GRANDE DIVERSITÉ DE SOURCES DE PROTÉINES : VIANDE (ROUGE ET BLANCHE, ex: poulet, dinde, boeuf maigre), POISSONS (MAIGRES ex: cabillaud, sole; ET GRAS ex: saumon, maquereau, sardines), ŒUFS, TOFU, TEMPEH, SEITAN, et une LARGE GAMME DE LÉGUMINEUSES (lentilles, pois chiches, haricots rouges, fèves). L'objectif est de ne PAS proposer uniquement de la viande ou du poisson, mais d'inclure régulièrement les autres sources pour une nutrition variée et équilibrée. Ne pas favoriser une source par rapport aux autres, mais les alterner.");
+    } else { mealSpecificConstraints.push("POUR LA PROTÉINE, IL EST **IMPÉRATIF** DE CHOISIR UNE TRÈS GRANDE DIVERSITÉ DE SOURCES : VIANDE (ROUGE ET BLANCHE), POISSONS (MAIGRES ET GRAS), ŒUFS, LÉGUMINEUSES (LENTILLES, POIS CHICHES, HARICOTS), TOFU, TEMPEH, OU PRODUITS LAITIERS (FROMAGE BLANC, YAOURT GREC). LA GÉNÉRATION DOIT VISER UNE VRAIE ALTERNANCE QUOTIDIENNE ENTRE CES CATÉGORIES ET **NE PAS SE LIMITER EXCLUSIVEMENT À LA VIANDE ET AU POISSON**, MÊME LORSQU'ILS SONT AUTORISÉS. PRIORISER LA VARIÉTÉ SUR PLUSIEURS JOURS."); 
     }
 
-    // MODIFICATION ICI: Appliquer les contraintes de cuisine du monde et d'origine à TOUS les repas
     if (mealType === 'petit_dejeuner') {
         mealSpecificConstraints.push("DOIT ÊTRE UN PETIT-DÉJEUNER COHÉRENT ET RÉALISTE. AUCUNE COMBINAISON ABSURDE (EX: POULET DANS UN PANCAKE SUCRÉ).");
         mealSpecificConstraints.push("DOIT ÊTRE SUCRÉ, EN ÉVITANT LES SAVEURS SALÉES (SAUF SI LES ŒUFS SONT INTÉGRÉS DANS UNE PRÉPARATION SUCRÉE COMME DES CRÊPES/PANCAKES).");
@@ -1682,11 +1996,11 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
         } else if (dayContext.sport === 'cardio' || dayContext.sport === 'hiit') {
             mealSpecificConstraints.push("POUR LES SÉANCES DE CARDIO OU HIIT, LE PETIT-DÉJEUNER DOIT ÊTRE ÉNERGISANT ET FACILEMENT DIGESTIBLE POUR NE PAS GÊNER L'ENTRAÎNEMENT. PROPOSEZ UNE VASTE GAMME D'OPTIONS VARIÉES ET ÉQUILIBRÉES, EN INCLUANT LE PORRIDGE COMME UNE OPTION OCCASIONNELLE, MAIS EN PRIVILÉGIANT LA NOUVEAUTÉ ET LA DIVERSITÉ.");
         }
-    } else if (mealType.includes('collation')) { // Apply world cuisine to all snacks
+    } else if (mealType.includes('collation')) {
         mealSpecificConstraints.push("DOIT ÊTRE UNE COLLATON LÉGÈRE ET ÉNERGISANTE. PAS UN REPAS COMPLET. DOIT ÊTRE FACILE À TRANSPORTER.");
         mealSpecificConstraints.push("EXEMPLES : FRUITS (BANANE, POMME), YAOURTS, SHAKES PROTÉINÉS, PETITES POIGNÉES D'OLÉAGINEUX (AMANDES, NOIX), BARRES CÉRÉALES MAISON, FRUITS SECS.");
         mealSpecificConstraints.push("ÉVITEZ LES ALIMENTS TROP GRAS OU TROP SUCRÉS.");
-        mealSpecificConstraints.push("PROPOSEZ UNE TRÈS GRANDE VARIÉTÉ DE COLLATIONS DU MONDE ENTIER."); // Added for all snacks
+        mealSpecificConstraints.push("PROPOSEZ UNE TRÈS GRANDE VARIÉTÉ DE COLLATIONS DU MONDE ENTIER.");
     } else if (mealType === 'dejeuner' || mealType === 'diner') {
         mealSpecificConstraints.push("DOIT ÊTRE UN REPAS COMPLET ET ÉQUILIBRÉ AVEC PROTÉINES, GLUCIDES ET LÉGUMES. DOIT ÊTRE COHÉRENT ET RÉALISTE, SANS COMBINAISONS ABSURDES.");
         mealSpecificConstraints.push("PROPOSEZ UNE TRÈS GRANDE VARIÉTÉ DE RECETTES POUR ÉVITER LA MONOTONIE : SALADES (VERTE, ICEBERG, CRUDITÉS, POMMES DE TERRE, RIZ, PÂTES), GALETTES DE POMMES DE TERRE, RECETTES AVEC DU PAIN (EX: PAIN AVEC FROMAGE, TOASTS PROTÉINÉS, SANDWICHS ÉQUILIBRÉS), BURGERS ET WRAPS (ADAPTÉS AU PROGRAMME NUTRITIONNEL).");
@@ -1705,6 +2019,16 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
     if (userProfileData.dislikedMeals && userProfileData.dislikedMeals.length > 0) {
         const dislikedMealTitles = userProfileData.dislikedMeals.map(dm => dm.title).join(', ');
         mealSpecificConstraints.push(`NE PROPOSEZ JAMAIS LES RECETTES SUIVANTES CAR L'UTILISATEUR NE LES A PAS AIMÉES : ${dislikedMealTitles}. ASSUREZ-VOUS DE PROPOSER UNE RECETTE COMPLÈTEMENT DIFFÉRENTE SI UNE RECETTE SIMILAIRE EST DANS CETTE LISTE. MAINTENEZ TOUJOURS UNE TRÈS GRANDE VARIÉTÉ, MÊME SI BEAUCOUP DE REPAS SONT DÉSAIMÉS.`);
+    }
+
+    // Ajout de la liste des recettes Basic-Fit au prompt
+    let basicFitRecipesPrompt = "";
+    const mealTypeKey = mealType.replace('_', '-').toUpperCase(); // Convertir 'petit_dejeuner' en 'PETIT-DÉJEUNER' etc.
+    if (basicFitRecipes[mealTypeKey] && basicFitRecipes[mealTypeKey].length > 0) {
+        basicFitRecipesPrompt = `
+        CONSIDÉREZ ÉGALEMENT LES RECETTES SUIVANTES DE BASIC-FIT COMME SOURCES D'INSPIRATION SUPPLÉMENTAIRES. VOUS POUVEZ LES PROPOSER DIRECTEMENT OU LES ADAPTER, TOUJOURS EN RESPECTANT LE PROFIL DE L'UTILISATEUR ET LES CONTRAINTES SPÉCIFIQUES. SI VOUS PROPOSEZ UNE DE CES RECETTES, AJOUTEZ "<span style='color:#FF6600;'>BASIC-FIT</span>" AU DÉBUT DU TITRE DE LA RECETTE.
+        ${basicFitRecipes[mealTypeKey].map(recipe => `- ${recipe}`).join('\n')}
+        `;
     }
 
     const prompt = `
@@ -1733,6 +2057,8 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
         - Mentionnez TOUJOURS la température de cuisson et le temps de cuisson EXACT pour chaque étape où cela est applicable.
         - INDIQUEZ TOUJOURS LE PAYS OU LA RÉGION D'ORIGINE DE LA RECETTE DANS LE CHAMP "country_of_origin". SI C'EST UN PLAT GÉNÉRAL, INDIQUEZ "INTERNATIONAL" OU "CLASSIQUE".
         ${mealSpecificConstraints.map(c => `- ${c}`).join('\n')}
+
+        ${basicFitRecipesPrompt}
 
         Format de sortie JSON attendu :
         {
