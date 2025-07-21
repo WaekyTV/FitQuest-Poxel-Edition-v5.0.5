@@ -1664,8 +1664,11 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
     const advice = specificMealAdvice[mealType]?.[adviceKey] || specificMealAdvice[mealType]?.default || "CONSEIL GÉNÉRAL : MANGEZ ÉQUILIBRÉ.";
     mealSpecificConstraints.push(advice);
 
-    if (!allowMeatFish) mealSpecificConstraints.push("EXCLURE STRICTEMENT TOUTE VIANDE (ROUGE OU BLANCHE) ET POISSON. PRIVILÉGIER LES PROTÉINES VÉGÉTALES (LÉGUMINEUSES, TOFU, TEMPEH, SEITAN, QUINOA, SARRASIN, AMARANTE, NOIX, GRAINES) OU LES ŒUFS/PRODUITS LAITIERS SI APPLICABLE AU TYPE DE REPAS. ASSURER UNE DIVERSITÉ RÉELLE DES SOURCES DE PROTÉINES VÉGÉTALES, NE PAS SE LIMITER AUX LENTILLES.");
-    else mealSpecificConstraints.push("ALTERNANCE ENTRE VIANDE (ROUGE ET BLANCHE), POISSONS (MAIGRES ET GRAS), ŒUFS, TOFU ET LÉGUMINEUSES POUR ASSURER UNE DIVERSITÉ DES SOURCES DE PROTÉINES.");
+   if (!allowMeatFish) {
+        mealSpecificConstraints.push("EXCLURE STRICTEMENT TOUTE VIANDE (ROUGE OU BLANCHE) ET POISSON. PRIVILÉGIER LES PROTÉINES VÉGÉTALES (LÉGUMINEUSES COMME LENTILLES, POIS CHICHES, HARICOTS ROUGES; TOFU, TEMPEH, SEITAN), LES CÉRÉALES COMPLÈTES À HAUTE TENEUR EN PROTÉINES (QUINOA, SARRASIN, AMARANTE), LES ŒUFS, ET LES PRODUITS LAITIERS (FROMAGE BLANC, YAOURT GREC) SI APPLICABLE AU TYPE DE REPAS. ASSURER UNE DIVERSITÉ RÉELLE ET SYSTÉMATIQUE DES SOURCES DE PROTÉINES VÉGÉTALES ET AUTRES, NE PAS SE LIMITER AUX LENTILLES OU AU TOFU. VARIER LES PRÉPARATIONS ET LES SAVEURS.");
+    } else {
+        mealSpecificConstraints.push("ALTERNANCE SYSTÉMATIQUE ET ÉQUILIBRÉE ENTRE UNE GRANDE DIVERSITÉ DE SOURCES DE PROTÉINES : VIANDE (ROUGE ET BLANCHE, ex: poulet, dinde, boeuf maigre), POISSONS (MAIGRES ex: cabillaud, sole; ET GRAS ex: saumon, maquereau, sardines), ŒUFS, TOFU, TEMPEH, SEITAN, et une LARGE GAMME DE LÉGUMINEUSES (lentilles, pois chiches, haricots rouges, fèves). L'objectif est de ne PAS proposer uniquement de la viande ou du poisson, mais d'inclure régulièrement les autres sources pour une nutrition variée et équilibrée. Ne pas favoriser une source par rapport aux autres, mais les alterner.");
+    }
 
     // MODIFICATION ICI: Appliquer les contraintes de cuisine du monde et d'origine à TOUS les repas
     if (mealType === 'petit_dejeuner') {
