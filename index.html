@@ -40,10 +40,51 @@
         .xp-bar-fill { height: 100%; background: linear-gradient(to right, #16a34a, #15803d); transition: width 0.5s ease-in-out, background 0.5s ease-in-out; position: absolute; left: 0; top: 0; border-radius: 2px; animation: xp-glow 1.5s infinite alternate; }
         @keyframes xp-glow { from { box-shadow: 0 0 5px #16a34a; } to { box-shadow: 0 0 15px #15803d; } }
         .xp-bar-text { position: absolute; color: #1a202c; font-size: 0.85rem; font-weight: bold; z-index: 10; text-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white; }
-        .notification-container { position: fixed; z-index: 1000; pointer-events: none; display: flex; flex-direction: column; gap: 10px; }
-        .notification { padding: 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.5s ease-out, transform 0.5s ease-out; font-family: 'VT323', monospace; display: flex; align-items: center; gap: 0.5rem; min-width: 250px; max-width: 90%; }
-        .notification-container-bottom-right { bottom: 20px; right: 20px; align-items: flex-end; }
-        .notification.general, .notification.tip { transform: translateX(100%); background-color: #2563eb; color: white; border: 2px solid #1e40af; text-align: right; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+        .notification-container {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;
+    /* Supprimer flex-direction pour permettre la superposition via JS */
+    /* display: flex; flex-direction: column; gap: 10px; */
+}
+.notification {
+    position: absolute; /* Permet la superposition */
+    opacity: 0;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out; /* Transitions plus rapides */
+    font-family: 'VT323', monospace;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 250px;
+    max-width: 90%;
+    padding: 0.5rem 1rem; /* Réduire le padding pour affiner la hauteur */
+    border-radius: 0.375rem; /* Rendre les coins légèrement moins arrondis pour un aspect plus fin */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3); /* Ombre plus discrète */
+    box-sizing: border-box; /* S'assurer que le padding n'augmente pas la taille totale */
+}
+.notification-container-bottom-right {
+    bottom: 20px;
+    right: 20px;
+    /* align-items: flex-end; (supprimé car position absolute) */
+    width: auto; /* Ajuster la largeur selon le contenu */
+    height: auto; /* Ajuster la hauteur selon le contenu */
+}
+.notification.general, .notification.tip {
+    transform: translateX(100%);
+    background-color: #2563eb;
+    color: white;
+    border: 2px solid #1e40af;
+    text-align: right;
+    border-radius: 0.375rem; /* Ajuster les bords aussi pour la hauteur */
+}
+/* Styles pour le texte et l'icône dans la notification */
+.notification p {
+    font-size: 0.875rem; /* Texte légèrement plus petit */
+    line-height: 1.2; /* Réduire l'interligne */
+}
+.notification span {
+    font-size: 1.5rem; /* Réduire la taille de l'icône */
+}
         .notification.general.error { background-color: #dc2626; border-color: #b91c1c; }
         .notification.general.warning { background-color: #d97706; border-color: #9a3412; }
         .notification.general.success { background-color: #16a34a; border-color: #15803d; }
@@ -203,6 +244,10 @@
        <i class="text-xl" data-lucide="trophy" style="width:24px; height:24px;"></i>
        <span class="text-sm mt-1">TROPHÉES</span>
       </button>
+      <button class="nav-item inline-flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-100 text-gray-200 hover:bg-gray-700 hover:text-yellow-300 border-2 border-gray-700 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)] active:shadow-none active:translate-x-1 active:translate-y-1" data-page="calendar">
+       <i class="text-xl" data-lucide="calendar-check" style="width:24px; height:24px;"></i>
+       <span class="text-sm mt-1">CALENDRIER</span>
+      </button>
       <button class="nav-item inline-flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-100 text-gray-200 hover:bg-gray-700 hover:text-yellow-300 border-2 border-gray-700 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)] active:shadow-none active:translate-x-1 active:translate-y-1" data-page="options">
        <i class="text-xl" data-lucide="settings" style="width:24px; height:24px;"></i>
        <span class="text-sm mt-1">OPTIONS</span>
@@ -246,9 +291,21 @@ let weightChartInstance = null;
 let exerciseChartInstance = null;
 let userId = 'local_user';
 let editingIntervalIndex = -1;
+let intervalsListDiv = null;
+let newDurationSecondsInput = null;
+let totalDurationDisplayElement = null;
+let newDurationMinutesInput = null;
+let newInstructionInput = null;
+let addUpdateIntervalBtn = null;
 let regeneratingMeal = null; // Flag to control generation state
 let numPeople = 1; // Default for meal generation
 let allowMeatFish = true; // Default for meal generation
+
+// Nouvelles variables pour le calendrier d'objectifs
+let sportProgramCalendar = {}; // Contiendra les données du calendrier sportif
+let totalProgramWeeks = 12; // Durée par défaut du programme en semaines
+let currentProgramPhase = 'phase1'; // Phase actuelle du programme
+let xpPerWeekCompleted = 50; // XP gagnée par semaine cochée
 
 // Nutritional program text to be passed to the AI
 let nutritionalProgramText = `
@@ -1065,27 +1122,207 @@ function initializeGlobalState() {
     // Load numPeople and allowMeatFish
     numPeople = loadFromLocalStorage('recipeNumPeople', 1);
     allowMeatFish = loadFromLocalStorage('recipeAllowMeatFish', true);
+    if (!Array.isArray(userProfile.earnedTrophies)) userProfile.earnedTrophies = [];
 
+// Load numPeople and allowMeatFish
+numPeople = loadFromLocalStorage('recipeNumPeople', 1);
+allowMeatFish = loadFromLocalStorage('recipeAllowMeatFish', true);
+
+// Charger les données du calendrier sportif
+sportProgramCalendar = loadFromLocalStorage('sportProgramCalendar', {
+    startDate: new Date().toISOString().split('T')[0], // Date du jour
+    weeks: {} // Contiendra { 'YYYY-MM-DD': { completed: true, sessions: 3, phase: 'phase1' } }
+});
+totalProgramWeeks = loadFromLocalStorage('totalProgramWeeks', 12);
+currentProgramPhase = loadFromLocalStorage('currentProgramPhase', 'phase1');
 
     console.log("[INITIALISATION] État global chargé.");
 }
 
 // Met à jour l'état du chronomètre dans le localStorage
 function updateLocalStorageChronoState() { saveToLocalStorage('chronoState', { intervals: chronoIntervals, currentTime: chronoCurrentTime, currentIntervalIndex: chronoCurrentIntervalIndex, isRunning: isChronoRunning, isPaused: isChronoPaused, enablePreCountdown: enableChronoPreCountdown, preCountdownDuration: chronoPreCountdownDuration }); }
+    // Calcule et affiche la durée totale de tous les intervalles (maintenant globale)
+    // Calcule et affiche la durée totale de tous les intervalles (maintenant avec secondes)
+function updateTotalIntervalDurationDisplay() {
+    let totalSeconds = 0;
+    chronoIntervals.forEach(interval => {
+        totalSeconds += interval.duration;
+    });
 
-// Affiche un message de notification à l'utilisateur
-function showMessage(msg, type = 'info') {
-    const container = document.getElementById('notification-container-bottom-right');
-    const notification = document.createElement('div');
-    notification.className = `notification general ${type}`;
-    const iconMap = { 'success': '🎉', 'error': '❌', 'warning': '⚠️', 'info': 'ℹ️', 'chrono': '⏱️', 'tip': '💡' };
-    notification.innerHTML = `<span class="text-2xl">${iconMap[type] || 'ℹ️'}</span><p class="font-bold text-sm sm:text-base">${String(msg).toUpperCase()}</p>`;
-    container.appendChild(notification);
-    void notification.offsetWidth; // Force reflow for animation
-    notification.classList.add('show');
-    const duration = type === 'trophy' ? 12000 : (type === 'tip' ? 20000 : (type === 'ai-advice' ? 15000 : 5000)); // AI advice for 15 seconds
-    setTimeout(() => { notification.classList.remove('show'); notification.addEventListener('transitionend', () => notification.remove(), { once: true }); }, duration);
+    const totalMinutes = Math.floor(totalSeconds / 60);
+    const remainingSeconds = totalSeconds % 60;
+
+    const totalDurationDisplay = totalDurationDisplayElement; // Utilise la variable globale
+
+    if (totalDurationDisplay) {
+        if (remainingSeconds > 0) {
+            totalDurationDisplay.textContent = `${totalMinutes} minutes et ${remainingSeconds} secondes`;
+        } else {
+            // Si le nombre de secondes est 0, on peut choisir d'afficher juste les minutes
+            totalDurationDisplay.textContent = `${totalMinutes} minutes`;
+        }
+    }
 }
+
+
+    // Rend la liste des intervalles (maintenant avec secondes affichées)
+function renderIntervalsList() {
+    console.log("[renderIntervalsList] Début du rendu. État actuel de chronoIntervals:", JSON.parse(JSON.stringify(chronoIntervals))); // DEBUG
+    let listHtml = '';
+    if (chronoIntervals.length === 0) listHtml = '<p class="text-gray-400">AUCUN INTERVALLE AJOUTÉ.</p>';
+    else {
+        listHtml = `<ul class="space-y-2">`;
+        chronoIntervals.forEach((interval, index) => {
+            const minutes = Math.floor(interval.duration / 60);
+            const seconds = interval.duration % 60;
+            const formattedSeconds = String(seconds).padStart(2, '0'); // Ajoute un zéro devant si < 10
+
+            listHtml += `
+                <li class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#131313] p-2 rounded-md border border-gray-700">
+                    <span class="text-gray-100 text-base sm:text-lg">${minutes}:${formattedSeconds} - ${String(interval.instruction).toUpperCase()}</span>
+                    <div class="flex gap-2 mt-2 sm:mt-0">
+                        <button class="btn-retro-green text-xs px-2 py-1 duplicate-interval-btn" data-index="${index}">DUPLIQUER</button>
+                        <button class="btn-retro-purple text-xs px-2 py-1 edit-interval-btn" data-index="${index}">MODIFIER</button>
+                        <button class="btn-retro-red text-xs px-2 py-1 remove-interval-btn" data-index="${index}">SUPPRIMER</button>
+                    </div>
+                </li>
+            `;
+        });
+        listHtml += `</ul>`;
+    }
+    intervalsListDiv.innerHTML = listHtml; // Utilise la variable globale
+    updateTotalIntervalDurationDisplay(); // Appel direct de la fonction globale
+
+
+    intervalsListDiv.querySelectorAll('.remove-interval-btn').forEach(button => {
+        button.onclick = async (event) => {
+            const indexToRemove = parseInt(event.target.dataset.index);
+            if (await showConfirmModal("CONFIRMER LA SUPPRESSION DE L'INTERVALLE ?")) {
+                chronoIntervals.splice(indexToRemove, 1);
+                updateLocalStorageChronoState();
+                showMessage("INTERVALLE SUPPRIMÉE !", 'success');
+                renderIntervalsList();
+                resetIntervalForm();
+            }
+        };
+    });
+
+
+    intervalsListDiv.querySelectorAll('.duplicate-interval-btn').forEach(button => {
+        button.onclick = async (event) => {
+            const indexToDuplicate = parseInt(event.target.dataset.index);
+            const originalInterval = chronoIntervals[indexToDuplicate];
+            if (originalInterval) {
+                chronoIntervals.push({ ...originalInterval });
+                updateLocalStorageChronoState();
+                showMessage("INTERVALLE DUPLIQUÉE !", 'success');
+                renderIntervalsList();
+            }
+        };
+    });
+
+
+    intervalsListDiv.querySelectorAll('.edit-interval-btn').forEach(button => {
+        button.onclick = (event) => {
+            const indexToEdit = parseInt(event.target.dataset.index);
+            showEditIntervalModal(indexToEdit);
+        };
+    });
+    console.log("[renderIntervalsList] Rendu terminé."); // DEBUG
+}
+
+
+    // Réinitialise les champs du formulaire d'intervalle (maintenant globale)
+    function resetIntervalForm() {
+    newDurationMinutesInput.value = '0'; // Réinitialise les minutes à 0
+    newDurationSecondsInput.value = '0'; // Réinitialise les secondes à 0
+    newInstructionInput.value = '';
+    addUpdateIntervalBtn.textContent = 'AJOUTER';
+    addUpdateIntervalBtn.classList.remove('btn-retro-purple');
+    addUpdateIntervalBtn.classList.add('btn-retro');
+    // editingIntervalIndex n'est plus utilisé par ce formulaire, mais on le réinitialise
+    // par sécurité si d'autres parties du code le consultent.
+    editingIntervalIndex = -1; // S'assure que l'état d'édition est réinitialisé
+}
+
+    
+    // Affiche un message de notification à l'utilisateur
+    function showMessage(msg, type = 'info') {
+        const container = document.getElementById('notification-container-bottom-right');
+        const notification = document.createElement('div');
+        notification.className = `notification general ${type}`;
+        const iconMap = { 'success': '🎉', 'error': '❌', 'warning': '⚠️', 'info': 'ℹ️', 'chrono': '⏱️', 'tip': '💡', 'ai-advice': '🤖' }; // Ajout de 'ai-advice'
+        notification.innerHTML = `<span class="text-2xl">${iconMap[type] || 'ℹ️'}</span><p class="font-bold text-sm sm:text-base">${String(msg).toUpperCase()}</p>`;
+
+        // --- DÉBUT DES MODIFICATIONS POUR LA SUPERPOSITION DES NOTIFICATIONS DE SUCCÈS ---
+        if (type === 'success') {
+            // Supprime toutes les notifications de succès existantes pour qu'une seule soit visible et la "recouvre"
+            // Itérer à l'envers pour supprimer des éléments d'une collection vivante sans casser l'itération
+            for (let i = container.children.length - 1; i >= 0; i--) {
+                const existingNotif = container.children[i];
+                // Vérifie si c'est une notification et si elle a la classe 'success'
+                if (existingNotif.classList.contains('notification') && existingNotif.classList.contains('success')) {
+                    existingNotif.remove();
+                }
+            }
+            // Pour les notifications de succès, on l'ajoute simplement à la fin du conteneur.
+            // La logique de positionnement dans la boucle suivante la placera correctement
+            // et comme elle est la seule de son type, elle sera "par-dessus" d'anciennes.
+            container.appendChild(notification); // MODIFIÉ: Appendre plutôt qu'insérer au début
+        } else {
+            // Pour les autres types de notifications, on les insère au début pour qu'elles apparaissent en haut de la pile visuellement
+            container.insertBefore(notification, container.firstChild);
+        }
+        // --- FIN DES MODIFICATIONS ---
+
+        // La logique de positionnement vertical reste la même pour tous les types après insertion
+        let currentBottom = 0;
+        // Collecter les notifications dans l'ordre d'affichage (du bas vers le haut visuellement)
+        const notificationsInOrder = Array.from(container.children).reverse();
+
+        notificationsInOrder.forEach((notif, index) => {
+            // Seulement ajuster la position des notifications qui sont actives et visibles
+            // ou la nouvelle notification qui vient d'être ajoutée.
+            if (notif.classList.contains('notification')) { // S'assurer que c'est bien un élément de notification
+                notif.style.bottom = `${currentBottom}px`;
+                // Appliquer l'animation de slide-in
+                if (notif === notification) { // C'est la nouvelle notification
+                    notif.style.right = '20px'; // Position de départ à droite
+                    void notif.offsetWidth; // Force le reflow avant l'animation
+                    notif.classList.add('show');
+                    notif.style.transform = 'translateX(0)'; // Fait glisser de droite à gauche
+                } else if (notif.classList.contains('show')) { // Notifications déjà affichées
+                    // S'assurer qu'elles restent à leur position horizontale
+                    notif.style.transform = 'translateX(0)';
+                }
+                currentBottom += notif.offsetHeight + 10; // 10px de gap entre les notifications
+            }
+        });
+
+        const duration = type === 'trophy' ? 12000 : (type === 'tip' ? 20000 : (type === 'ai-advice' ? 15000 : 5000));
+
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)'; // Fait disparaître vers la droite
+            notification.style.opacity = '0';
+            notification.addEventListener('transitionend', function handler() {
+                notification.remove(); // Supprime l'élément du DOM après la transition
+                // Réajuster les positions des notifications restantes après la suppression
+                // Seulement si la notification supprimée n'était PAS une notification de succès.
+                // Pour les succès, on veut qu'elle disparaisse et c'est tout, la suivante gérera le placement.
+                if (type !== 'success') {
+                    let reAdjustBottom = 0;
+                    // Filtrer pour ne réajuster que les notifications qui sont encore là, visibles, et qui ne sont pas de type 'success'
+                    Array.from(container.children).reverse().forEach(notif => {
+                        if (notif.classList.contains('notification') && notif.classList.contains('show') && !notif.classList.contains('success')) {
+                            notif.style.bottom = `${reAdjustBottom}px`;
+                            reAdjustBottom += notif.offsetHeight + 10;
+                        }
+                    });
+                }
+                notification.removeEventListener('transitionend', handler); // Nettoyer l'écouteur
+            }, { once: true });
+        }, duration);
+    }
 // Fonction pour gérer l'action "J'aime pas" sur un repas (maintenant avec bascule)
 async function handleDislikeMeal(mealObject) { // Prend l'objet repas complet
     if (!mealObject || !mealObject.id) {
@@ -1343,8 +1580,9 @@ function renderPage(pageName) {
         case 'workout': renderWorkoutView(mainContent); break;
         case 'recipes': renderRecipeView(mainContent); break;
         case 'chrono': renderChronoIntervalleView(mainContent); break;
-        case 'progress': renderProgressView(mainContent); break;
+       case 'progress': renderProgressView(mainContent); break;
         case 'trophies': renderTrophyRoomView(mainContent); break;
+        case 'calendar': renderCalendarView(mainContent); break; // Nouvelle ligne
         case 'options': renderOptionsView(mainContent); break;
         default: renderDailyPlanView(mainContent); break;
     }
@@ -1752,7 +1990,7 @@ function showLogWorkoutModal(currentExercise) {
         </div>
     `;
     document.getElementById('global-modals-container').innerHTML = modalHtml;
-
+    document.getElementById('edit-interval-modal').dataset.editingIndex = intervalIndex;
     const modal = document.getElementById('log-workout-modal');
     modal.querySelector('#cancel-log-btn').onclick = () => modal.remove();
     modal.querySelector('#confirm-log-btn').onclick = async () => {
@@ -1899,6 +2137,109 @@ function showConfirmModal(message) {
         };
     });
 }
+function showEditIntervalModal(intervalIndex) {
+    const intervalToEdit = chronoIntervals[intervalIndex];
+    if (!intervalToEdit) {
+        showMessage("ERREUR: INTERVALLE NON TROUVÉ POUR MODIFICATION.", 'error');
+        return;
+    }
+
+    const initialMinutes = Math.floor(intervalToEdit.duration / 60);
+    const initialSeconds = intervalToEdit.duration % 60;
+
+    let modalHtml = `
+        <div id="edit-interval-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 font-vt323">
+            <div class="bg-gray-800 p-6 rounded-lg border-4 border-purple-500 shadow-xl w-full max-w-md text-white">
+                <h3 class="text-2xl sm:text-3xl font-bold text-yellow-300 mb-4 text-center">MODIFIER L'INTERVALLE</h3>
+                <div class="space-y-4">
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex-1">
+                            <label for="edit-duration-minutes" class="block text-gray-200 text-sm font-bold mb-2">DURÉE (MINUTES) :</label>
+                            <input type="number" id="edit-duration-minutes" class="input-retro" placeholder="EX: 1" min="0" value="${initialMinutes}" />
+                        </div>
+                        <div class="flex-1">
+                            <label for="edit-duration-seconds" class="block text-gray-200 text-sm font-bold mb-2">DURÉE (SECONDES) :</label>
+                            <input type="number" id="edit-duration-seconds" class="input-retro" placeholder="EX: 30" min="0" max="59" value="${initialSeconds}" />
+                        </div>
+                    </div>
+                    <div>
+                        <label for="edit-instruction" class="block text-gray-200 text-sm font-bold mb-2">INSTRUCTION :</label>
+                        <input type="text" id="edit-instruction" class="input-retro" placeholder="EX: COURSE RAPIDE" value="${intervalToEdit.instruction}" />
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button id="cancel-edit-interval-btn" class="btn-retro-red">ANNULER</button>
+                    <button id="confirm-edit-interval-btn" class="btn-retro-green">CONFIRMER MODIFICATION</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Insère le HTML de la modale dans le conteneur global
+    document.getElementById('global-modals-container').innerHTML = modalHtml;
+
+
+    // IMPORTANT : On récupère la référence à la modale APRÈS qu'elle ait été insérée dans le DOM
+    const modal = document.getElementById('edit-interval-modal'); 
+    
+    // On stocke l'index de l'intervalle directement sur l'élément de la modale
+    // Cela permet de le récupérer facilement quand le bouton de confirmation est cliqué
+    modal.dataset.editingIndex = intervalIndex; 
+
+
+    // Références aux champs de saisie de la modale
+    const editDurationMinutesInput = modal.querySelector('#edit-duration-minutes');
+    const editDurationSecondsInput = modal.querySelector('#edit-duration-seconds'); // Nouvelle référence pour les secondes
+    const editInstructionInput = modal.querySelector('#edit-instruction');
+
+
+    // Gère le clic sur le bouton "ANNULER" : ferme la modale
+    modal.querySelector('#cancel-edit-interval-btn').onclick = () => modal.remove();
+
+
+    // Gère le clic sur le bouton "CONFIRMER MODIFICATION"
+    modal.querySelector('#confirm-edit-interval-btn').onclick = () => {
+        const newMinutes = parseInt(editDurationMinutesInput.value) || 0;
+        const newSeconds = parseInt(editDurationSecondsInput.value) || 0; // Récupère les nouvelles secondes
+        const newInstruction = editInstructionInput.value;
+
+
+        // Récupère l'index de l'intervalle à modifier à partir des données de la modale
+        const currentIntervalIndex = parseInt(modal.dataset.editingIndex); 
+
+
+        if (newMinutes === 0 && newSeconds === 0) { // Vérifie que la durée n'est pas nulle
+            showMessage("ERREUR: LA DURÉE (MINUTES OU SECONDES) EST REQUISE.", 'error');
+            return;
+        }
+        if (newInstruction.trim() === '') {
+            showMessage("ERREUR: L'INSTRUCTION EST REQUISE.", 'error');
+            return;
+        }
+
+        const newDurationTotalSeconds = (newMinutes * 60) + newSeconds; // Calcule la durée totale
+
+
+        // Vérifie que l'index est valide et qu'il correspond bien à un intervalle existant
+        if (isNaN(currentIntervalIndex) || currentIntervalIndex < 0 || currentIntervalIndex >= chronoIntervals.length) {
+            console.error("Erreur: Index d'intervalle invalide pour la modification.");
+            showMessage("ERREUR: Impossible de trouver l'intervalle à modifier.", 'error');
+            return;
+        }
+
+
+        // Met à jour l'objet spécifique dans le tableau chronoIntervals avec les nouvelles valeurs
+        chronoIntervals[currentIntervalIndex].duration = newDurationTotalSeconds;
+        chronoIntervals[currentIntervalIndex].instruction = newInstruction.trim();
+
+
+        updateLocalStorageChronoState(); // Sauvegarde le tableau chronoIntervals mis à jour
+        showMessage("INTERVALLE MISE À JOUR !", 'success');
+        modal.remove(); // Ferme la modale après la modification
+        renderIntervalsList(); // Re-rend la liste des intervalles pour afficher les changements
+    };
+}
+
 
 // Synchronize breakfast/snack meals across similar days
 function syncSimilarMeals(generatedMeal, originalDateKey) {
@@ -2622,18 +2963,19 @@ function attachMealActionListeners() {
         };
     });
 }
-
-// Rend la vue du chronomètre d'intervalle
+    // Rend la vue du chronomètre d'intervalle (mise à jour avec entrée des secondes)
 function renderChronoIntervalleView(container) {
     let html = `
         <div class="card-retro mb-6">
             <h2 class="text-3xl sm:text-4xl font-bold text-yellow-300 mb-4 text-center">CHRONOMÈTRE D'INTERVALLES</h2>
+
 
             <!-- Affichage du Chrono -->
             <div class="bg-gray-800 p-6 rounded-lg border-4 border-blue-700 shadow-xl mb-6 text-center">
                 <p class="text-5xl sm:text-7xl font-bold text-green-400 mb-2" id="chrono-display">PRÊT: 00</p>
                 <p class="text-xl sm:text-2xl text-purple-300" id="chrono-instruction">AJOUTEZ DES INTERVALLES</p>
             </div>
+
 
             <!-- Contrôles du Chrono -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
@@ -2642,6 +2984,7 @@ function renderChronoIntervalleView(container) {
                 <button id="reset-chrono-btn" class="btn-retro-red col-span-2 sm:col-span-1">RESET</button>
                 <button id="skip-interval-btn" class="btn-retro col-span-2 sm:col-span-1">PASSER</button>
             </div>
+
 
             <!-- Paramètres du Chrono -->
             <div class="bg-gray-700 p-4 rounded-lg border-2 border-yellow-500 mb-6">
@@ -2656,20 +2999,27 @@ function renderChronoIntervalleView(container) {
                 </div>
             </div>
 
+
             <!-- Ajout/Modification d'Intervalle -->
             <div class="bg-gray-700 p-4 rounded-lg border-2 border-blue-700 mb-6">
                 <h3 class="text-xl sm:text-2xl text-yellow-300 mb-3">AJOUTER / MODIFIER INTERVALLE :</h3>
-                <div class="mb-4">
-                    <label for="new-duration-minutes" class="block text-gray-200 text-sm font-bold mb-2">DURÉE (MINUTES) :</label>
-                    <input type="number" id="new-duration-minutes" class="input-retro" placeholder="EX: 1" min="1" />
+                <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                    <div class="flex-1">
+                        <label for="new-duration-minutes" class="block text-gray-200 text-sm font-bold mb-2">DURÉE (MINUTES) :</label>
+                        <input type="number" id="new-duration-minutes" class="input-retro" placeholder="EX: 1" min="0" value="0" />
+                    </div>
+                    <div class="flex-1">
+                        <label for="new-duration-seconds" class="block text-gray-200 text-sm font-bold mb-2">DURÉE (SECONDES) :</label>
+                        <input type="number" id="new-duration-seconds" class="input-retro" placeholder="EX: 30" min="0" max="59" value="0" />
+                    </div>
                 </div>
                 <div class="mb-4">
                     <label for="new-instruction" class="block text-gray-200 text-sm font-bold mb-2">INSTRUCTION :</label>
                     <input type="text" id="new-instruction" class="input-retro" placeholder="EX: COURSE RAPIDE" />
                 </div>
                 <button id="add-update-interval-btn" class="btn-retro w-full">AJOUTER</button>
-                <button id="reset-interval-form-btn" class="btn-retro-red w-full mt-2 hidden">ANNULER MODIFICATION</button>
             </div>
+
 
             <!-- Liste des Intervalles -->
             <div class="bg-gray-700 p-4 rounded-lg border-2 border-purple-500 mb-6">
@@ -2688,29 +3038,38 @@ function renderChronoIntervalleView(container) {
     `;
     container.innerHTML = html;
 
+    // ASSIGNATION DES ÉLÉMENTS AUX VARIABLES GLOBALES DÉCLARÉES EN HAUT DU SCRIPT
+    totalDurationDisplayElement = document.getElementById('total-interval-duration');
+    intervalsListDiv = document.getElementById('intervals-list');
+    newDurationMinutesInput = document.getElementById('new-duration-minutes'); // Mises à jour pour les minutes
+    newInstructionInput = document.getElementById('new-instruction');
+    addUpdateIntervalBtn = document.getElementById('add-update-interval-btn');
+
+    // Nouvelle variable globale pour le champ des secondes dans le formulaire d'ajout
+    newDurationSecondsInput = document.getElementById('new-duration-seconds');
+
+
+    // Références locales aux éléments de contrôle du chrono
     const chronoDisplay = document.getElementById('chrono-display');
     const chronoInstruction = document.getElementById('chrono-instruction');
     const startChronoBtn = document.getElementById('start-chrono-btn');
     const pauseChronoBtn = document.getElementById('pause-chrono-btn');
     const resetChronoBtn = document.getElementById('reset-chrono-btn');
     const skipIntervalBtn = document.getElementById('skip-interval-btn');
-    const newDurationMinutesInput = document.getElementById('new-duration-minutes');
-    const newInstructionInput = document.getElementById('new-instruction');
-    const addUpdateIntervalBtn = document.getElementById('add-update-interval-btn');
-    const resetIntervalFormBtn = document.getElementById('reset-interval-form-btn');
-    const intervalsListDiv = document.getElementById('intervals-list');
     const enablePreCountdownCheckbox = document.getElementById('enable-pre-countdown');
     const preCountdownDurationSetting = document.getElementById('pre-countdown-duration-setting');
     const chronoPreCountdownDurationInput = document.getElementById('chrono-pre-countdown-duration');
     const saveSequenceBtn = document.getElementById('save-sequence-btn');
     const loadSequenceBtn = document.getElementById('load-sequence-btn');
-    updateTotalIntervalDurationDisplay();
+
+
     // Met à jour l'affichage du chronomètre
     function updateChronoDisplay() {
         const displayTime = chronoCurrentIntervalIndex === -1 ? `PRÊT: ${String(chronoCurrentTime).padStart(2, '0')}` : `${String(Math.floor(chronoCurrentTime / 60)).padStart(2, '0')}:${String(chronoCurrentTime % 60).padStart(2, '0')}`;
         const currentInstruction = chronoCurrentIntervalIndex === -1 ? "PRÉPAREZ-VOUS !" : chronoIntervals[chronoCurrentIntervalIndex]?.instruction || "FINI !";
         chronoDisplay.textContent = displayTime;
         chronoInstruction.textContent = String(currentInstruction).toUpperCase();
+
 
         if (isChronoRunning && !isChronoPaused) {
             startChronoBtn.disabled = true;
@@ -2742,9 +3101,11 @@ function renderChronoIntervalleView(container) {
         }
     }
 
+
     // Boucle principale du chronomètre
     function chronoLoop() {
         if (!isChronoRunning || isChronoPaused) return;
+
 
         if (chronoCurrentIntervalIndex === -1) { // Pre-countdown phase
             chronoCurrentTime--;
@@ -2783,101 +3144,34 @@ function renderChronoIntervalleView(container) {
         updateChronoDisplay();
     }
 
-    // Rend la liste des intervalles
-    function renderIntervalsList() {
-        let listHtml = '';
-        if (chronoIntervals.length === 0) listHtml = '<p class="text-gray-400">AUCUN INTERVALLE AJOUTÉ.</p>';
-        else {
-            listHtml = `<ul class="space-y-2">`;
-            chronoIntervals.forEach((interval, index) => {
-                listHtml += `
-                    <li class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#131313] p-2 rounded-md border border-gray-700">
-                        <span class="text-gray-100 text-base sm:text-lg">${Math.floor(interval.duration / 60)}MIN${interval.duration % 60 > 0 ? ` ${interval.duration % 60}S` : ''} - ${String(interval.instruction).toUpperCase()}</span>
-                        <div class="flex gap-2 mt-2 sm:mt-0">
-                            <button class="btn-retro-green text-xs px-2 py-1 duplicate-interval-btn" data-index="${index}">DUPLIQUER</button>
-                            <button class="btn-retro-purple text-xs px-2 py-1 edit-interval-btn" data-index="${index}">MODIFIER</button>
-                            <button class="btn-retro-red text-xs px-2 py-1 remove-interval-btn" data-index="${index}">SUPPRIMER</button>
-                        </div>
-                    </li>
-                `;
-            });
-            listHtml += `</ul>`;
-        }
-        intervalsListDiv.innerHTML = listHtml;
-        updateTotalIntervalDurationDisplay();
+    // Appel des fonctions globales au lieu de les définir localement
+    updateTotalIntervalDurationDisplay(); // Appel direct de la fonction globale
+    renderIntervalsList(); // Appel direct de la fonction globale
 
-        intervalsListDiv.querySelectorAll('.remove-interval-btn').forEach(button => {
-            button.onclick = async (event) => {
-                const indexToRemove = parseInt(event.target.dataset.index);
-                if (await showConfirmModal("CONFIRMER LA SUPPRESSION DE L'INTERVALLE ?")) {
-                    chronoIntervals.splice(indexToRemove, 1);
-                    updateLocalStorageChronoState();
-                    showMessage("INTERVALLE SUPPRIMÉE !", 'success');
-                    renderIntervalsList();
-                    resetIntervalForm();
-                }
-            };
-        });
 
-        intervalsListDiv.querySelectorAll('.duplicate-interval-btn').forEach(button => {
-            button.onclick = async (event) => {
-                const indexToDuplicate = parseInt(event.target.dataset.index);
-                const originalInterval = chronoIntervals[indexToDuplicate];
-                if (originalInterval) {
-                    chronoIntervals.push({ ...originalInterval });
-                    updateLocalStorageChronoState();
-                    showMessage("INTERVALLE DUPLIQUÉE !", 'success');
-                    renderIntervalsList();
-                }
-            };
-        });
-
-        intervalsListDiv.querySelectorAll('.edit-interval-btn').forEach(button => {
-            button.onclick = (event) => {
-                editingIntervalIndex = parseInt(event.target.dataset.index);
-                const intervalToEdit = chronoIntervals[editingIntervalIndex];
-                if (intervalToEdit) {
-                    newDurationMinutesInput.value = Math.floor(intervalToEdit.duration / 60);
-                    newInstructionInput.value = intervalToEdit.instruction;
-                    addUpdateIntervalBtn.textContent = 'METTRE À JOUR';
-                    addUpdateIntervalBtn.classList.remove('btn-retro');
-                    addUpdateIntervalBtn.classList.add('btn-retro-purple');
-                    resetIntervalFormBtn.classList.remove('hidden');
-                    showMessage(`MODIFICATION DE L'INTERVALLE ${editingIntervalIndex + 1}.`, 'info');
-                }
-            };
-        });
-    }
-
-    function resetIntervalForm() {
-        newDurationMinutesInput.value = '';
-        newInstructionInput.value = '';
-        addUpdateIntervalBtn.textContent = 'AJOUTER';
-        addUpdateIntervalBtn.classList.remove('btn-retro-purple');
-        addUpdateIntervalBtn.classList.add('btn-retro');
-        resetIntervalFormBtn.classList.add('hidden');
-        editingIntervalIndex = -1;
-    }
-
+    // Écouteurs d'événements spécifiques à cette vue
     addUpdateIntervalBtn.onclick = () => {
-        const duration = newDurationMinutesInput.value;
-        const instruction = newInstructionInput.value;
-        if (duration === '' || instruction.trim() === '') { showMessage("ERREUR: LA DURÉE ET L'INSTRUCTION SONT REQUISES.", 'error'); return; }
-        const durationSeconds = parseInt(duration) * 60;
+        const minutes = parseInt(newDurationMinutesInput.value) || 0;
+        const seconds = parseInt(newDurationSecondsInput.value) || 0; // Récupère les secondes
 
-        if (editingIntervalIndex !== -1) {
-            chronoIntervals[editingIntervalIndex] = { duration: durationSeconds, instruction: instruction.trim() };
-            showMessage("INTERVALLE MISE À JOUR !", 'success');
-        } else {
-            chronoIntervals.push({ duration: durationSeconds, instruction: instruction.trim() });
-            showMessage("INTERVALLE AJOUTÉE !", 'success');
+        if (minutes === 0 && seconds === 0) {
+            showMessage("ERREUR: LA DURÉE (MINUTES OU SECONDES) EST REQUISE.", 'error');
+            return;
         }
-        updateLocalStorageChronoState();
-        renderIntervalsList();
-        resetIntervalForm();
-    };
+        if (newInstructionInput.value.trim() === '') {
+            showMessage("ERREUR: L'INSTRUCTION EST REQUISE.", 'error');
+            return;
+        }
 
-    resetIntervalFormBtn.onclick = resetIntervalForm;
+        const totalDurationSeconds = (minutes * 60) + seconds; // Calcule la durée totale
+
+        chronoIntervals.push({ duration: totalDurationSeconds, instruction: newInstructionInput.value.trim() });
+        showMessage("INTERVALLE AJOUTÉE !", 'success');
+
+        updateLocalStorageChronoState();
+        renderIntervalsList(); // Appel la fonction globale pour rafraîchir
+        resetIntervalForm(); // Appel la fonction globale pour effacer les champs
+    };
 
     enablePreCountdownCheckbox.onchange = (e) => { enableChronoPreCountdown = e.target.checked; preCountdownDurationSetting.classList.toggle('hidden', !enableChronoPreCountdown); updateLocalStorageChronoState(); };
     chronoPreCountdownDurationInput.onchange = (e) => { chronoPreCountdownDuration = Math.max(1, parseInt(e.target.value) || 1); updateLocalStorageChronoState(); };
@@ -2926,6 +3220,7 @@ function renderChronoIntervalleView(container) {
     skipIntervalBtn.onclick = () => {
         if (!isChronoRunning || chronoCurrentIntervalIndex === -1) { showMessage("LE CHRONO N'EST PAS EN COURS OU EN PHASE DE PRÉ-COMPTE.", 'warning'); return; }
 
+
         chronoCurrentIntervalIndex++;
         if (chronoCurrentIntervalIndex < chronoIntervals.length) {
             chronoCurrentTime = chronoIntervals[chronoCurrentIntervalIndex].duration;
@@ -2945,6 +3240,7 @@ function renderChronoIntervalleView(container) {
         updateLocalStorageChronoState();
         updateChronoDisplay();
     };
+
 
     saveSequenceBtn.onclick = () => {
         const modalDiv = document.createElement('div');
@@ -2975,6 +3271,7 @@ function renderChronoIntervalleView(container) {
             document.getElementById('sequenceName').value = ''; // Clear sequence name input
         };
     };
+
 
     loadSequenceBtn.onclick = () => {
         const modalDiv = document.createElement('div');
@@ -3009,6 +3306,7 @@ function renderChronoIntervalleView(container) {
         document.getElementById('global-modals-container').appendChild(modalDiv);
         document.getElementById('cancel-load-sequence-btn').onclick = () => modalDiv.remove();
 
+
         modalDiv.querySelectorAll('.load-sequence-item-btn').forEach(button => {
             button.onclick = async (event) => {
                 const idToLoad = event.target.dataset.id;
@@ -3027,6 +3325,7 @@ function renderChronoIntervalleView(container) {
             };
         });
 
+
         modalDiv.querySelectorAll('.delete-sequence-item-btn').forEach(button => {
             button.onclick = async (event) => {
                 const idToDelete = event.target.dataset.id;
@@ -3041,30 +3340,16 @@ function renderChronoIntervalleView(container) {
         });
     };
 
-    renderIntervalsList();
+    // Appels initiaux
     updateChronoDisplay();
-    // Restart chrono if it was running before page re-render
+    // Redémarrer le chrono si il était en cours avant le re-rendu de la page
     if (isChronoRunning && !isChronoPaused && !chronoIntervalTimerRef) {
         chronoIntervalTimerRef = setInterval(chronoLoop, 1000);
     }
 }
-// Calcule et affiche la durée totale de tous les intervalles
-function updateTotalIntervalDurationDisplay() {
-    let totalSeconds = 0;
-    chronoIntervals.forEach(interval => {
-        totalSeconds += interval.duration;
-    });
-    const totalMinutes = Math.floor(totalSeconds / 60);
-    const remainingSeconds = totalSeconds % 60;
-    const totalDurationDisplay = document.getElementById('total-interval-duration');
-    if (totalDurationDisplay) {
-        if (remainingSeconds > 0) {
-            totalDurationDisplay.textContent = `${totalMinutes} minutes et ${remainingSeconds} secondes`;
-        } else {
-            totalDurationDisplay.textContent = `${totalMinutes} minutes`;
-        }
-    }
-}
+
+    
+
 // Rend la vue de l'évolution (graphiques)
 function renderProgressView(container) {
     let html = `
@@ -3509,7 +3794,178 @@ function renderTrophyRoomView(container) {
     }
     renderLucideIcons(); // Ensure Lucide icons are rendered
 }
+// Rend la vue du calendrier d'objectifs sportifs
+function renderCalendarView(container) {
+    let html = `
+        <div class="card-retro mb-6">
+            <h2 class="text-3xl sm:text-4xl font-bold text-yellow-300 mb-4 text-center">CALENDRIER D'OBJECTIFS</h2>
 
+            <div class="p-4 rounded-lg border-2 border-blue-700 bg-gray-700 mb-6">
+                <h3 class="text-xl sm:text-2xl text-yellow-300 mb-3">PARAMÈTRES DU PROGRAMME :</h3>
+                <div class="mb-4">
+                    <label for="programStartDate" class="block text-gray-200 text-sm font-bold mb-2">DATE DE DÉBUT DU PROGRAMME :</label>
+                    <input type="date" id="programStartDate" class="input-retro" value="${sportProgramCalendar.startDate}" />
+                </div>
+                <div class="mb-4">
+                    <label for="totalProgramWeeksInput" class="block text-gray-200 text-sm font-bold mb-2">DURÉE TOTALE DU PROGRAMME (SEMAINES) :</label>
+                    <input type="number" id="totalProgramWeeksInput" class="input-retro" min="1" value="${totalProgramWeeks}" />
+                </div>
+                <div class="mb-4">
+                    <label for="currentProgramPhaseSelect" class="block text-gray-200 text-sm font-bold mb-2">PHASE ACTUELLE :</label>
+                    <select id="currentProgramPhaseSelect" class="select-retro">
+                        <option value="phase1">PHASE 1 : ${String(workoutProgram.phase1?.name || 'INITIAL').toUpperCase()}</option>
+                        <option value="phase2">PHASE 2 : ${String(workoutProgram.phase2?.name || 'ALTERNATIVE').toUpperCase()}</option>
+                    </select>
+                </div>
+                 <button id="save-calendar-settings-btn" class="btn-retro-green w-full">SAUVEGARDER LES PARAMÈTRES</button>
+                 <p class="text-xs text-gray-400 mt-2 text-center">CHANGEZ LA DATE DE DÉBUT POUR RÉINITIALISER LE CALENDRIER.</p>
+            </div>
+
+            <div class="p-4 rounded-lg border-2 border-purple-500 bg-gray-700">
+                <h3 class="text-xl sm:text-2xl text-yellow-300 mb-3">VOTRE CALENDRIER :</h3>
+                <div id="calendar-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Les semaines du calendrier seront générées ici -->
+                </div>
+            </div>
+        </div>
+    `;
+    container.innerHTML = html;
+
+    const programStartDateInput = document.getElementById('programStartDate');
+    const totalProgramWeeksInput = document.getElementById('totalProgramWeeksInput');
+    const currentProgramPhaseSelect = document.getElementById('currentProgramPhaseSelect');
+    const saveCalendarSettingsBtn = document.getElementById('save-calendar-settings-btn');
+    const calendarGrid = document.getElementById('calendar-grid');
+
+    // Initialisation des valeurs
+    programStartDateInput.value = sportProgramCalendar.startDate;
+    totalProgramWeeksInput.value = totalProgramWeeks;
+    currentProgramPhaseSelect.value = currentProgramPhase;
+
+    // Fonction pour sauvegarder les paramètres du calendrier
+    saveCalendarSettingsBtn.onclick = () => {
+        const newStartDate = programStartDateInput.value;
+        const newTotalWeeks = parseInt(totalProgramWeeksInput.value);
+        const newCurrentPhase = currentProgramPhaseSelect.value;
+
+        if (!newStartDate || isNaN(newTotalWeeks) || newTotalWeeks < 1) {
+            showMessage("ERREUR: VEUILLEZ RENSEIGNER UNE DATE DE DÉBUT ET UNE DURÉE VALIDES.", 'error');
+            return;
+        }
+
+        // Si la date de début change, réinitialiser l'historique des semaines
+        if (newStartDate !== sportProgramCalendar.startDate) {
+            sportProgramCalendar.startDate = newStartDate;
+            sportProgramCalendar.weeks = {}; // Réinitialise les semaines
+            showMessage("DATE DE DÉBUT MISE À JOUR. CALENDRIER RÉINITIALISÉ.", 'info');
+        }
+
+        totalProgramWeeks = newTotalWeeks;
+        currentProgramPhase = newCurrentPhase;
+
+        saveToLocalStorage('sportProgramCalendar', sportProgramCalendar);
+        saveToLocalStorage('totalProgramWeeks', totalProgramWeeks);
+        saveToLocalStorage('currentProgramPhase', currentProgramPhase);
+
+        showMessage("PARAMÈTRES DU CALENDRIER SAUVEGARDÉS !", 'success');
+        renderCalendarWeeks(); // Re-render le calendrier après sauvegarde
+    };
+
+
+    // Fonction pour générer et afficher les semaines du calendrier
+    function renderCalendarWeeks() {
+        calendarGrid.innerHTML = '';
+        const startDate = new Date(sportProgramCalendar.startDate);
+
+        for (let i = 0; i < totalProgramWeeks; i++) {
+            const weekStartDate = new Date(startDate);
+            weekStartDate.setDate(startDate.getDate() + (i * 7));
+            const weekEndDate = new Date(weekStartDate);
+            weekEndDate.setDate(weekStartDate.getDate() + 6);
+
+            const weekKey = formatDateToYYYYMMDD(weekStartDate);
+            const weekData = sportProgramCalendar.weeks[weekKey] || { completed: false, sessions: 0, phase: 'phase1' };
+
+            // Déterminer la phase de la semaine
+            let phaseName = 'PHASE INCONNUE';
+            if (workoutProgram.phase1 && i < 6) { // Supposons 6 semaines par phase pour l'exemple
+                phaseName = workoutProgram.phase1.name;
+                weekData.phase = 'phase1';
+            } else if (workoutProgram.phase2 && i >= 6 && i < 12) {
+                phaseName = workoutProgram.phase2.name;
+                weekData.phase = 'phase2';
+            } else {
+                // Si plus de 12 semaines ou phases supplémentaires, la logique devrait être affinée
+                // Pour cet exemple, on reste sur phase1/phase2
+                phaseName = workoutProgram.phase1.name; // Fallback
+                weekData.phase = 'phase1'; // Fallback
+            }
+
+
+            const weekDiv = document.createElement('div');
+            weekDiv.className = `p-4 rounded-lg border-4 shadow-lg text-center ${weekData.completed ? 'border-green-500 bg-green-900' : 'border-blue-500 bg-gray-800'}`;
+            weekDiv.innerHTML = `
+                <h3 class="text-xl font-bold ${weekData.completed ? 'text-green-200' : 'text-blue-200'}">SEMAINE ${i + 1}</h3>
+                <p class="text-sm text-gray-300 mb-2">${formatDateToYYYYMMDD(weekStartDate)} au ${formatDateToYYYYMMDD(weekEndDate)}</p>
+                <p class="text-yellow-300 text-sm mb-3">PHASE : ${String(phaseName).toUpperCase()}</p>
+
+                <div class="flex items-center justify-center mb-3">
+                    <input type="checkbox" id="week-completed-${weekKey}" data-week-key="${weekKey}"
+                        class="mr-2 h-5 w-5 text-purple-600 rounded border-gray-300 focus:ring-purple-500 cursor-pointer"
+                        ${weekData.completed ? 'checked' : ''}>
+                    <label for="week-completed-${weekKey}" class="text-gray-200 text-sm font-bold cursor-pointer">SEMAINE TERMINÉE</label>
+                </div>
+
+                <div class="mb-3">
+                    <label for="sessions-count-${weekKey}" class="block text-gray-200 text-sm font-bold mb-2">SÉANCES FAITES :</label>
+                    <input type="number" id="sessions-count-${weekKey}" data-week-key="${weekKey}"
+                        class="input-retro text-center w-20 mx-auto" min="0" value="${weekData.sessions}" />
+                </div>
+            `;
+            calendarGrid.appendChild(weekDiv);
+
+            // Attach listeners
+            const checkbox = weekDiv.querySelector(`#week-completed-${weekKey}`);
+            checkbox.onchange = (e) => {
+                const isCompleted = e.target.checked;
+                const weekToUpdateKey = e.target.dataset.weekKey;
+                if (!sportProgramCalendar.weeks[weekToUpdateKey]) {
+                    sportProgramCalendar.weeks[weekToUpdateKey] = { completed: false, sessions: 0, phase: weekData.phase };
+                }
+                sportProgramCalendar.weeks[weekToUpdateKey].completed = isCompleted;
+
+                if (isCompleted) {
+                    userProfile.currentXP += xpPerWeekCompleted;
+                    showMessage(`XP GAGNÉE : ${xpPerWeekCompleted} XP POUR LA SEMAINE TERMINÉE !`, 'success');
+                    updateXPBar();
+                } else {
+                    // Optionnel: retirer l'XP si la case est décochée (peut être annulé si l'XP est permanente)
+                    userProfile.currentXP = Math.max(0, userProfile.currentXP - xpPerWeekCompleted);
+                    showMessage(`XP RETIRÉE : ${xpPerWeekCompleted} XP POUR LA SEMAINE DÉCOCHÉE.`, 'warning');
+                    updateXPBar();
+                }
+                saveToLocalStorage('sportProgramCalendar', sportProgramCalendar);
+                saveToLocalStorage('userProfile', userProfile);
+                renderCalendarWeeks(); // Re-render pour mettre à jour les couleurs
+            };
+
+            const sessionsInput = weekDiv.querySelector(`#sessions-count-${weekKey}`);
+            sessionsInput.onchange = (e) => {
+                const sessions = parseInt(e.target.value) || 0;
+                const weekToUpdateKey = e.target.dataset.weekKey;
+                if (!sportProgramCalendar.weeks[weekToUpdateKey]) {
+                    sportProgramCalendar.weeks[weekToUpdateKey] = { completed: false, sessions: 0, phase: weekData.phase };
+                }
+                sportProgramCalendar.weeks[weekToUpdateKey].sessions = sessions;
+                saveToLocalStorage('sportProgramCalendar', sportProgramCalendar);
+            };
+        }
+        renderLucideIcons();
+    }
+
+    // Appel initial pour afficher le calendrier
+    renderCalendarWeeks();
+}
 // Rend la vue des options
 function renderOptionsView(container) {
     let html = `
@@ -3635,7 +4091,11 @@ function renderOptionsView(container) {
             intervalSequences: intervalSequences,
             shifts: shifts,
             savedWorkoutProgram: workoutProgram,
-            masterVolume: masterVolume
+            masterVolume: masterVolume,
+            // Nouvelles données du calendrier
+            sportProgramCalendar: sportProgramCalendar,
+            totalProgramWeeks: totalProgramWeeks,
+            currentProgramPhase: currentProgramPhase
         };
         const dataStr = JSON.stringify(dataToExport, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
@@ -3659,15 +4119,19 @@ function renderOptionsView(container) {
                 try {
                     const importedData = JSON.parse(e.target.result);
                     if (await showConfirmModal("CONFIRMER L'IMPORTATION ? CELA REMPLACERA TOUTES VOS DONNÉES ACTUELLES.")) {
-                        // Update global state variables directly
-                        userProfile = importedData.userProfile || userProfile;
-                        weeklyMealPlan = importedData.weeklyMealPlan || weeklyMealPlan;
-                        workoutLogs = importedData.workoutLogs || workoutLogs;
-                        weightHistory = importedData.weightHistory || weightHistory;
-                        intervalSequences = importedData.intervalSequences || intervalSequences;
-                        shifts = importedData.shifts || shifts;
-                        workoutProgram = importedData.savedWorkoutProgram || workoutProgram;
-                        masterVolume = importedData.masterVolume !== undefined ? importedData.masterVolume : masterVolume;
+                       // Update global state variables directly
+                    userProfile = importedData.userProfile || userProfile;
+                    weeklyMealPlan = importedData.weeklyMealPlan || weeklyMealPlan;
+                    workoutLogs = importedData.workoutLogs || workoutLogs;
+                    weightHistory = importedData.weightHistory || weightHistory;
+                    intervalSequences = importedData.intervalSequences || intervalSequences;
+                    shifts = importedData.shifts || shifts;
+                    workoutProgram = importedData.savedWorkoutProgram || workoutProgram;
+                    masterVolume = importedData.masterVolume !== undefined ? importedData.masterVolume : masterVolume;
+                    // Nouvelles données du calendrier à importer
+                    sportProgramCalendar = importedData.sportProgramCalendar || sportProgramCalendar;
+                    totalProgramWeeks = importedData.totalProgramWeeks !== undefined ? importedData.totalProgramWeeks : totalProgramWeeks;
+                    currentProgramPhase = importedData.currentProgramPhase || currentProgramPhase;
 
                         // Save updated state to localStorage
                         saveToLocalStorage('userProfile', userProfile);
@@ -3702,17 +4166,39 @@ function renderOptionsView(container) {
     };
 }
 
-// Écouteurs d'événements pour la navigation
+// Écouteurs d'événements pour la navigationavigation
+
 function attachEventListeners() {
+
+    // Bouton retour à l'accueil
+
     document.getElementById('home-button').onclick = () => renderPage('daily_plan');
+
+
+
+    // Écouteurs pour les boutons de navigation (Planning, Sport, Recettes, etc.)
+
     document.querySelectorAll('.nav-item').forEach(button => {
+
         button.onclick = (event) => {
+
             const page = event.currentTarget.dataset.page;
+
             renderPage(page);
+
         };
+
     });
+
+
+
+    // Écouteur pour le bouton de sauvegarde du profil
+
     document.getElementById('save-profile-btn').onclick = handleSaveProfile;
+
 }
+
+
 
 // Chargement initial de l'application
 window.onload = initializeApp;
