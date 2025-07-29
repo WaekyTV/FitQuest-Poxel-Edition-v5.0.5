@@ -1990,7 +1990,6 @@ function showLogWorkoutModal(currentExercise) {
         </div>
     `;
     document.getElementById('global-modals-container').innerHTML = modalHtml;
-    document.getElementById('edit-interval-modal').dataset.editingIndex = intervalIndex;
     const modal = document.getElementById('log-workout-modal');
     modal.querySelector('#cancel-log-btn').onclick = () => modal.remove();
     modal.querySelector('#confirm-log-btn').onclick = async () => {
