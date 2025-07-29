@@ -2291,8 +2291,10 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
     const apiKey = userProfileData.apiKey || "";
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
+
     console.log(`[API KEY DEBUG] Using API Key: ${apiKey ? 'Provided (length: ' + apiKey.length + ')' : 'Empty (expecting Canvas injection)'}`);
     console.log(`[API KEY DEBUG] API URL: ${apiUrl}`);
+
 
     const userHeight = userProfileData.height;
     const userWeight = userProfileData.weight;
@@ -2300,30 +2302,36 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
     const userImcCategory = userProfileData.imcCategory;
     const userProteinNeeds = userProfileData.proteinNeeds;
 
+
     let actualNumPeople = numPeople;
     if (mealType === 'petit_dejeuner' || mealType.startsWith('collation')) {
         actualNumPeople = 1; // Force à 1 personne pour le petit-déjeuner et les collations
     }
+
 
     let mealContextDescription = getMealMomentContext(mealType, dayContext.poste, dayContext.sport);
     let sportImpact = "";
     if (dayContext.sport !== 'aucun') sportImpact = "CE JOUR INCLUT UNE SÉANCE DE SPORT. LE REPAS DOIT SOUTENIR LA PERFORMANCE OU LA RÉCUPÉRATION.";
     else sportImpact = "CE JOUR N'INCLUT PAS DE SÉANCE DE SPORT. LE REPAS DOIT ÊTRE ÉQUILIBRÉ POUR UN JOUR MOINS ACTIF.";
 
+
     let posteImpact = "";
     if (dayContext.poste === '18h-6h') posteImpact = "C'EST UN POSTE DE NUIT. L'ALIMENTATION DOIT ÊTRE ADAPTÉE POUR MAINTENIR L'ÉNERGIE ET LA VIGILANCE PENDANT LA NUIT, ET FAVORISER LE REPOS EN JOURNÉE.";
     else if (dayContext.poste.includes('jour')) posteImpact = "C'EST UN POSTE DE JOUR. L'ALIMENTATION DOIT APPORTER UNE ÉNERGIE DURABLE POUR LA JOURNÉE.";
     else if (dayContext.poste.includes('repos')) posteImpact = "C'EST UN JOUR DE REPOS. L'ALIMENTATION DOIT FAVORISER LA RÉCUPÉRATION ET LE MAINTIEN.";
+
 
     let mealSpecificConstraints = [];
     const adviceKey = mealType.includes('collation') ? `${mealType.replace('_unique', '')}_${dayContext.poste === '18h-6h' ? 'pendant' : (dayContext.sport !== 'aucun' ? 'post' : (dayContext.poste === '7h-18h' ? '7h-18h_apresmidi' : 'repos_default'))}` : dayContext.poste === '18h-6h' ? '18h-6h' : (dayContext.sport !== 'aucun' ? 'repos_sport' : 'default');
     const advice = specificMealAdvice[mealType]?.[adviceKey] || specificMealAdvice[mealType]?.default || "CONSEIL GÉNÉRAL : MANGEZ ÉQUILIBRÉ.";
     mealSpecificConstraints.push(advice);
 
+
    if (!allowMeatFish) {
         mealSpecificConstraints.push("EXCLURE STRICTEMENT TOUTE VIANDE (ROUGE OU BLANCHE) ET POISSON. PRIVILÉGIER LES PROTÉINES VÉGÉTALES (LÉGUMINEUSES COMME LENTILLES, POIS CHICHES, HARICOTS ROUGES; TOFU, TEMPEH, SEITAN), LES CÉRÉALES COMPLÈTES À HAUTE TENEUR EN PROTÉINES (QUINOA, SARRASIN, AMARANTE), LES ŒUFS, ET LES PRODUITS LAITIERS (FROMAGE BLANC, YAOURT GREC) SI APPLICABLE AU TYPE DE REPAS. ASSURER UNE DIVERSITÉ RÉELLE ET SYSTÉMATIQUE DES SOURCES DE PROTÉINES VÉGÉTALES ET AUTRES, NE PAS SE LIMITER AUX LENTILLES OU AU TOFU. VARIER LES PRÉPARATIONS ET LES SAVEURS.");
-    } else { mealSpecificConstraints.push("POUR LA PROTÉINE, IL EST **IMPÉRATIF** DE CHOISIR UNE TRÈS GRANDE DIVERSITÉ DE SOURCES : VIANDE (ROUGE ET BLANCHE), POISSONS (MAIGRES ET GRAS), ŒUFS, LÉGUMINEUSES (LENTILLES, POIS CHICHES, HARICOTS), TOFU, TEMPEH, OU PRODUITS LAITIERS (FROMAGE BLANC, YAOURT GREC). LA GÉNÉRATION DOIT VISER UNE VRAIE ALTERNANCE QUOTIDIENNE ENTRE CES CATÉGORIES ET **NE PAS SE LIMITER EXCLUSIVEMENT À LA VIANDE ET AU POISSON**, MÊME LORSQU'ILS SONT AUTORISÉS. PRIORISER LA VARIÉTÉ SUR PLUSIEURS JOURS."); 
+    } else { mealSpecificConstraints.push("POUR LA PROTÉINE, IL EST **IMPÉRATIF** DE CHOISIR UNE TRÈS GRANDE DIVERSITÉ DE SOURCES : VIANDE (ROUGE ET BLANCHE), POISSONS (MAIGRES ET GRAS), ŒUFS, LÉGUMINEUSES (LENTILLES, POIS CHICHES, HARICOTS), TOFU, TEMPEH, OU PRODUITS LAITIERS (FROMAGE BLANC, YAOURT GREC). LA GÉNÉRATION DOIT VISER UNE VRAIE ALTERNANCE QUOTIDIENNE ENTRE CES CATÉGORIES ET **NE PAS SE LIMITER EXCLUSIVEMENT À LA VIANDE ET AU POISSON**, MÊME LORSQU'ILS SONT AUTORISÉS. PRIORISER LA VARIÉTÉ SUR PLUSIEURS JOURS.");
     }
+
 
     if (mealType === 'petit_dejeuner') {
         mealSpecificConstraints.push("DOIT ÊTRE UN PETIT-DÉJEUNER COHÉRENT ET RÉALISTE. AUCUNE COMBINAISON ABSURDE (EX: POULET DANS UN PANCAKE SUCRÉ).");
@@ -2348,18 +2356,25 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
         mealSpecificConstraints.push("LES RECETTES PEUVENT ÊTRE ISSUES D'AUTRES CULTURES OU CUISINES DU MONDE, MAIS DOIVENT TOUJOURS RESPECTER LE PROGRAMME SPORTIF ET NUTRITIONNEL, ET ÊTRE RÉALISTES.");
     }
 
+
     let existingMealsPrompt = "";
     if (existingMealsToday.length > 0) {
         existingMealsToday.forEach(meal => { existingMealsPrompt += `- ${meal.title} (${meal.mealType})\n`; });
         mealSpecificConstraints.push(`PRENEZ EN COMPTE LES AUTRES REPAS DÉJÀ GÉNÉRÉS POUR CE JOUR POUR ASSURER LA VARIÉTÉ ET ÉVITER LES DOUBLONS D'INGRÉDIENTS OU DE PRÉPARATIONS. REPAS DÉJÀ PRÉVUS POUR CE JOUR : ${existingMealsPrompt}`);
     }
 
+
     if (likedMeal) mealSpecificConstraints.push(`L'UTILISATEUR A AIMÉ LA RECETTE SUIVANTE. UTILISEZ-LA COMME INSPIRATION POUR GÉNÉRER UNE NOUVELLE RECETTE SIMILAIRE, MAIS PAS IDENTIQUE, EN VARIANT LÉGÈREMENT LES INGRÉDIENTS OU LA PRÉPARATION POUR ÉVITER LA MONOTONIE ET CONTINUER À OFFRIR DE LA NOUVELLE. RECETTE AIMÉE : TITRE: ${likedMeal.title}, DESCRIPTION: ${likedMeal.description_du_plat}, INGRÉDIENTS: ${likedMeal.ingredients_list.join(', ')}.`);
+
 
     if (userProfileData.dislikedMeals && userProfileData.dislikedMeals.length > 0) {
         const dislikedMealTitles = userProfileData.dislikedMeals.map(dm => dm.title).join(', ');
         mealSpecificConstraints.push(`NE PROPOSEZ JAMAIS LES RECETTES SUIVANTES CAR L'UTILISATEUR NE LES A PAS AIMÉES : ${dislikedMealTitles}. ASSUREZ-VOUS DE PROPOSER UNE RECETTE COMPLÈTEMENT DIFFÉRENTE SI UNE RECETTE SIMILAIRE EST DANS CETTE LISTE. MAINTENEZ TOUJOURS UNE TRÈS GRANDE VARIÉTÉ, MÊME SI BEAUCOUP DE REPAS SONT DÉSAIMÉS.`);
     }
+
+    // AJOUT DE CETTE CONTRAINTE POUR S'ASSURER QUE L'IA FOURNIT LES CALORIES POUR 1 PERSONNE
+    mealSpecificConstraints.push("L'ESTIMATION DES CALORIES DANS le champ 'calories_kcal' DOIT TOUJOURS ÊTRE UNIQUEMENT POUR 1 PERSONNE, MÊME SI LA RECETTE EST POUR PLUSIEURS PERSONNES.");
+
 
     // Ajout de la liste des recettes Basic-Fit au prompt
     let basicFitRecipesPrompt = "";
@@ -2371,6 +2386,7 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
         `;
     }
 
+
     const prompt = `
         Génère une recette de repas pour ${actualNumPeople} personne(s) au format JSON.
         Le repas est de type : "${mealType}".
@@ -2379,8 +2395,10 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
         ${sportImpact}
         ${posteImpact}
 
+
         PROGRAMME NUTRITIONNEL DÉTAILLÉ À RESPECTER STRICTEMENT :
         ${userProfileData.nutritionalProgramText}
+
 
         CONTRAINTES SPÉCIFIQUES POUR CE REPAS :
         - Toutes les informations (titre, description, ingrédients, étapes de préparation, conseils, notes) doivent être STRICTEMENT EN FRANÇAIS.
@@ -2398,7 +2416,9 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
         - INDIQUEZ TOUJOURS LE PAYS OU LA RÉGION D'ORIGINE DE LA RECETTE DANS LE CHAMP "country_of_origin". SI C'EST UN PLAT GÉNÉRAL, INDIQUEZ "INTERNATIONAL" OU "CLASSIQUE".
         ${mealSpecificConstraints.map(c => `- ${c}`).join('\n')}
 
+
         ${basicFitRecipesPrompt}
+
 
         Format de sortie JSON attendu :
         {
@@ -2407,13 +2427,14 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
             "ingredients_label": "INGRÉDIENTS (POUR X PERS)",
             "ingredients_list": ["QUANTITÉ UNITÉ INGRÉDIENT 1", "QUANTITÉ UNITÉ INGRÉDIENT 2", ...],
             "preparation_steps": ["ÉTAPE 1.", "ÉTAPE 2.", ...],
-            "ma_portion_waeky": "VOTRE PORTION (POUR WAEKY) : DÉTAILLEZ LES QUANTITÉS SPÉCIFIQUES POUR L'UTILISATEUR (EX: 150G POULET, 200G RIZ, PORTION GÉNÉREUSE DE LÉGUMES). INCLUEZ UNE ESTIMATION DES CALORIES POUR CETTE PORTION (EX: ~500 KCAL).",
-            "calories_kcal": "ESTIMATION DES CALORIES TOTALES POUR CE REPAS POUR ${actualNumPeople} PERSONNE(S) (EX: 500)",
+            "ma_portion_waeky": "VOTRE PORTION (POUR WAEKY - TOUJOURS POUR 1 PERSONNE, AVEC ESTIMATION CALORIQUE)",
+            "calories_kcal": "ESTIMATION DES CALORIES POUR UNE SEULE PERSONNE (EX: 500)",
             "conseils_reutilisation_economie": "CONSEILS POUR RÉUTILISER LES RESTES OU ÉCONOMISER.",
             "notes": "NOTES SUPPLÉMENTAIRES OU INFORMATIONS NUTRITIONNELLES.",
             "country_of_origin": "PAYS D'ORIGINE (EX: FRANCE, ITALIE, JAPON)"
         }
     `;
+
 
     const payload = {
         contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -2424,11 +2445,11 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
                 properties: {
                     "title": { "type": "STRING" },
                     "description_du_plat": { "type": "STRING" },
-                    "ingredients_label": { "type": "STRING", "default": "INGRÉDIENTS (POUR " + actualNumPeople + " PERS)" },
+                    "ingredients_label": { "type": "STRING", "default": `INGRÉDIENTS (POUR ${actualNumPeople} PERS)` }, // Garde le label pour le nombre de personnes
                     "ingredients_list": { "type": "ARRAY", "items": { "type": "STRING" } },
                     "preparation_steps": { "type": "ARRAY", "items": { "type": "STRING" } },
                     "ma_portion_waeky": { "type": "STRING" },
-                    "calories_kcal": { "type": "NUMBER" },
+                    "calories_kcal": { "type": "NUMBER" }, // Le type reste nombre, c'est l'instruction qui compte
                     "conseils_reutilisation_economie": { "type": "STRING" },
                     "notes": { "type": "STRING" },
                     "country_of_origin": { "type": "STRING" }
@@ -2438,12 +2459,14 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
         }
     };
 
+
     try {
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -2452,6 +2475,7 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
             else if (errorText) errorMessage += ` - ${errorText}`;
             throw new Error(errorMessage);
         }
+
 
         const rawResult = await response.text();
         let parsedContent = null;
@@ -2469,6 +2493,7 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
             parsedContent = { id: generateUniqueId(), title: fallbackTitle, description_du_plat: fallbackDesc, ingredients_label: `INGRÉDIENTS (POUR ${actualNumPeople} PERS)`, ingredients_list: fallbackIngredients, preparation_steps: fallbackPreparation, ma_portion_waeky: fallbackPortion, calories_kcal: fallbackCalories, conseils_reutilisation_economie: fallbackConseils, notes: fallbackNotes, country_of_origin: "INTERNATIONAL" };
         }
 
+
         return {
             id: generateUniqueId(),
             title: String(parsedContent.title || '').toUpperCase(),
@@ -2477,7 +2502,7 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
             ingredients_list: (parsedContent.ingredients_list || []).map(item => String(item).toUpperCase()),
             preparation_steps: (parsedContent.preparation_steps || []).map(step => String(step).toUpperCase()),
             ma_portion_waeky: String(parsedContent.ma_portion_waeky || '').toUpperCase(),
-            calories_kcal: parsedContent.calories_kcal !== undefined ? parseInt(parsedContent.calories_kcal) : 0,
+            calories_kcal: parsedContent.calories_kcal !== undefined ? parseInt(parsedContent.calories_kcal) : 0, // Les calories devraient être déjà pour 1 personne ici
             conseils_reutilisation_economie: String(parsedContent.conseils_reutilisation_economie || '').toUpperCase(),
             notes: String(parsedContent.notes || '').toUpperCase(),
             country_of_origin: String(parsedContent.country_of_origin || 'INTERNATIONAL').toUpperCase(),
@@ -2490,10 +2515,6 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
         return { id: generateUniqueId(), title: fallbackTitle, description_du_plat: fallbackDesc, ingredients_label: `INGRÉDIENTS (POUR ${actualNumPeople} PERS)`, ingredients_list: fallbackIngredients, preparation_steps: fallbackPreparation, ma_portion_waeky: fallbackPortion, calories_kcal: fallbackCalories, conseils_reutilisation_economie: fallbackConseils, notes: fallbackNotes, mealType: mealType, dayContext: dayContext, country_of_origin: "INTERNATIONAL" };
     }
 }
-
-
-
-
 // Rend la vue des recettes et gère la génération du plan de repas
 function renderRecipeView(container) {
     // numPeople and allowMeatFish are now global, loaded in initializeGlobalState
