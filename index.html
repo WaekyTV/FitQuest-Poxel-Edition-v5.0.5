@@ -300,6 +300,7 @@ let addUpdateIntervalBtn = null;
 let regeneratingMeal = null; // Flag to control generation state
 let numPeople = 1; // Default for meal generation
 let allowMeatFish = true; // Default for meal generation
+let preferPowderedProtein = false; // Nouvelle variable pour la préférence de protéines en poudre
 
 // Nouvelles variables pour le calendrier d'objectifs
 let sportProgramCalendar = {}; // Contiendra les données du calendrier sportif
@@ -1127,7 +1128,7 @@ function initializeGlobalState() {
 // Load numPeople and allowMeatFish
 numPeople = loadFromLocalStorage('recipeNumPeople', 1);
 allowMeatFish = loadFromLocalStorage('recipeAllowMeatFish', true);
-
+preferPowderedProtein = loadFromLocalStorage('preferPowderedProtein', false); // Charge la nouvelle préférence
 // Charger les données du calendrier sportif
 sportProgramCalendar = loadFromLocalStorage('sportProgramCalendar', {
     startDate: new Date().toISOString().split('T')[0], // Date du jour
@@ -2371,7 +2372,15 @@ async function generateInternalMeal(mealType, dayContext, existingMealsToday = [
         const dislikedMealTitles = userProfileData.dislikedMeals.map(dm => dm.title).join(', ');
         mealSpecificConstraints.push(`NE PROPOSEZ JAMAIS LES RECETTES SUIVANTES CAR L'UTILISATEUR NE LES A PAS AIMÉES : ${dislikedMealTitles}. ASSUREZ-VOUS DE PROPOSER UNE RECETTE COMPLÈTEMENT DIFFÉRENTE SI UNE RECETTE SIMILAIRE EST DANS CETTE LISTE. MAINTENEZ TOUJOURS UNE TRÈS GRANDE VARIÉTÉ, MÊME SI BEAUCOUP DE REPAS SONT DÉSAIMÉS.`);
     }
+    // Contrainte pour les protéines en poudre
+if (preferPowderedProtein) {
+    mealSpecificConstraints.push("AUGMENTER LA FRÉQUENCE DES PROPOSITIONS DE REPAS CONTENANT DES PROTÉINES EN POUDRE (TYPE WHEY). LES INTÉGRER DANS LES PETITS-DÉJEUNERS, COLLATIONS, OU COMME ALTERNATIVE RAPIDE POUR LES REPAS PRINCIPAUX SI LE CONTEXTE LE PERMET. MAINTENIR LA VARIÉTÉ GLOBALE DES SOURCES DE PROTÉINES (ANIMALES, VÉGÉTALES) MAIS AVEC UNE PRÉSENCE ACCRUE DE LA WHEY.");
+} else {
+    mealSpecificConstraints.push("PROPOSER UNE VARIÉTÉ ÉQUILIBRÉE DE SOURCES DE PROTÉINES : ANIMALES (VIANDE, POISSON, ŒUFS) ET VÉGÉTALES (LÉGUMINEUSES, TOFU, TEMPEH). LES PROTÉINES EN POUDRE PEUVENT ÊTRE UTILISÉES OCCASIONNELLEMENT SI PERTINENT POUR LE TYPE DE REPAS (EX: PETIT-DÉJEUNER, COLLATION), MAIS NE DOIVENT PAS ÊTRE PRÉDOMINANTES.");
+}
 
+// AJOUT DE CETTE CONTRAINTE POUR S'ASSURER QUE L'IA FOURNIT LES CALORIES POUR 1 PERSONNE
+mealSpecificConstraints.push("L'ESTIMATION DES CALORIES DANS le champ 'calories_kcal' DOIT TOUJOURS ÊTRE UNIQUEMENT POUR 1 PERSONNE, MÊME SI LA RECETTE EST POUR PLUSIEURS PERSONNES.");
     // AJOUT DE CETTE CONTRAINTE POUR S'ASSURER QUE L'IA FOURNIT LES CALORIES POUR 1 PERSONNE
     mealSpecificConstraints.push("L'ESTIMATION DES CALORIES DANS le champ 'calories_kcal' DOIT TOUJOURS ÊTRE UNIQUEMENT POUR 1 PERSONNE, MÊME SI LA RECETTE EST POUR PLUSIEURS PERSONNES.");
 
@@ -2529,10 +2538,18 @@ function renderRecipeView(container) {
                     <label for="numPeople" class="block text-gray-200 text-sm font-bold mb-2">POUR COMBIEN DE PERSONNES ?</label>
                     <input type="number" id="numPeople" value="${numPeople}" min="1" class="input-retro" />
                 </div>
-                <div class="mb-4 flex items-center">
+                <!-- Conteneur pour regrouper les options de préférences alimentaires -->
+            <div class="space-y-4 mb-4">
+                <div class="flex items-center">
                     <input type="checkbox" id="allowMeatFish" ${allowMeatFish ? 'checked' : ''} class="mr-2 h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500" />
                     <label for="allowMeatFish" class="text-gray-200 text-sm font-bold">AUTORISER VIANDE ET POISSON (PLUS ÉCONOMIQUE SANS)</label>
                 </div>
+                <!-- Nouvelle encoche pour les protéines en poudre -->
+                <div class="flex items-center">
+                    <input type="checkbox" id="preferPowderedProtein" ${preferPowderedProtein ? 'checked' : ''} class="mr-2 h-4 w-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500" />
+                    <label for="preferPowderedProtein" class="text-gray-200 text-sm font-bold">PROPOSITION DE PLUS DE PROTÉINES EN POUDRE</label>
+                </div>
+            </div>
                 <button id="generate-plan-btn" class="btn-retro-purple w-full flex items-center justify-center" ${regeneratingMeal ? 'disabled' : ''}>
                     <span id="generate-plan-spinner" class="spinner mr-2 ${regeneratingMeal ? '' : 'hidden'}"></span>
                     <span id="generate-plan-text">${regeneratingMeal ? 'GÉNÉRATION...' : 'GÉNÉRER PLAN DE REPAS'}</span>
@@ -2556,7 +2573,9 @@ function renderRecipeView(container) {
 
     numPeopleInput.onchange = (e) => { numPeople = Math.max(1, parseInt(e.target.value) || 1); saveToLocalStorage('recipeNumPeople', numPeople); };
     allowMeatFishCheckbox.onchange = (e) => { allowMeatFish = e.target.checked; saveToLocalStorage('recipeAllowMeatFish', allowMeatFish); };
-
+    // Gère le changement de la nouvelle encoche
+const preferPowderedProteinCheckbox = document.getElementById('preferPowderedProtein');
+preferPowderedProteinCheckbox.onchange = (e) => { preferPowderedProtein = e.target.checked; saveToLocalStorage('preferPowderedProtein', preferPowderedProtein); };
     // Update button state based on regeneratingMeal flag
     if (regeneratingMeal) {
         generatePlanBtn.disabled = true;
