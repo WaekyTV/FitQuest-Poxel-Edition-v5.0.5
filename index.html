@@ -2389,11 +2389,12 @@ mealSpecificConstraints.push("L'ESTIMATION DES CALORIES DANS le champ 'calories_
     let basicFitRecipesPrompt = "";
     const mealTypeKey = mealType.replace('_', '-').toUpperCase(); // Convertir 'petit_dejeuner' en 'PETIT-DÉJEUNER' etc.
     if (basicFitRecipes[mealTypeKey] && basicFitRecipes[mealTypeKey].length > 0) {
-        basicFitRecipesPrompt = `
-        CONSIDÉREZ ÉGALEMENT LES RECETTES SUIVANTES DE BASIC-FIT COMME SOURCES D'INSPIRATION SUPPLÉMENTAIRES. VOUS POUVEZ LES PROPOSER DIRECTEMENT OU LES ADAPTER, TOUJOURS EN RESPECTANT LE PROFIL DE L'UTILISATEUR ET LES CONTRAINTES SPÉCIFIQUES. SI VOUS PROPOSEZ UNE DE CES RECETTES, AJOUTEZ "<span style='color:#FF6600;'>BASIC-FIT</span>" AU DÉBUT DU TITRE DE LA RECETTE.
-        ${basicFitRecipes[mealTypeKey].map(recipe => `- ${recipe}`).join('\n')}
-        `;
-    }
+    basicFitRecipesPrompt = `
+    CONSIDÉREZ ÉGALEMENT LES RECETTES SUIVANTES DE BASIC-FIT COMME SOURCES D'INSPIRATION SUPPLÉMENTAIRES. POUR MAINTENIR LA VARIÉTÉ ET NE PAS LES PROPOSER SYSTÉMATIQUEMENT, INTÉGREZ-LES OCCASIONNELLEMENT (environ 10-20% des cas pour ce type de repas) PARMI VOS SUGGESTIONS HABITUELLES. SI VOUS PROPOSEZ UNE DE CES RECETTES, AJOUTEZ "[BASIC-FIT]" AU DÉBUT DU TITRE DE LA RECETTE.
+    Liste des recettes Basic-Fit pour ce type de repas :
+    ${basicFitRecipes[mealTypeKey].map(recipe => `- ${recipe}`).join('\n')}
+    `;
+}
 
 
     const prompt = `
@@ -2724,7 +2725,7 @@ preferPowderedProteinCheckbox.onchange = (e) => { preferPowderedProtein = e.targ
                 mealsHtml += `
                         <div class="bg-gray-800 p-3 rounded-md border border-blue-700 shadow-sm">
                             <div class="flex justify-between items-center cursor-pointer py-2" data-toggle="meal-content-${meal.id}">
-                                <h5 class="text-lg font-bold text-gray-100">${momentContext} : ${String(meal.title || 'Titre Indisponible').toUpperCase()} <span class="text-yellow-400 text-sm">(${meal.calories_kcal} KCAL)</span></h5>
+                                <h5 class="text-lg font-bold text-gray-100">${momentContext} : ${String(meal.title || 'Titre Indisponible').toUpperCase().replace('[BASIC-FIT]', '<span style="color:#FF6600;">BASIC-FIT</span>')} <span class="text-yellow-400 text-sm">(${meal.calories_kcal} KCAL)</span></h5>
                                 <div class="flex items-center">
                                     <button class="btn-retro-purple text-xs px-2 py-1 flex items-center justify-center regenerate-meal-btn" data-date="${dayData.date}" data-meal-type="${mealType}" ${isRegeneratingCurrentMeal ? 'disabled' : ''}>
                                         ${isRegeneratingCurrentMeal ? `<span class="spinner w-4 h-4"></span>` : `<i data-lucide="rotate-ccw" style="width:16px; height:16px;"></i>`}
@@ -2800,7 +2801,7 @@ function displayDailyMealPlan(date) {
             mealsContainer.innerHTML += `
                 <div class="card-retro mb-4 p-4">
                     <div class="flex justify-between items-center mb-2">
-                        <h4 class="text-xl font-bold text-blue-300">${meal.mealType.toUpperCase().replace('_', ' ')}: ${meal.title}</h4>
+                        <h4 class="text-xl font-bold text-blue-300">${meal.mealType.toUpperCase().replace('_', ' ')}: ${String(meal.title || 'Titre Indisponible').toUpperCase().replace('[BASIC-FIT]', '<span style="color:#FF6600;">BASIC-FIT</span>')}</h4>
                         <div class="flex items-center gap-2">
                             <button class="like-meal-btn btn-icon" data-meal-id="${meal.id}" data-date="${date}" data-meal-type="${mealType}" title="Ajouter aux favoris">
                                 <i class="text-xl" data-lucide="heart" style="color:${isLiked ? '#FCD34D' : 'white'};"></i>
